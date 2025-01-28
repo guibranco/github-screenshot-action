@@ -97,4 +97,6 @@ jobs:
           tag: v${{ steps.gitversion.outputs.semVer }}
           name: Release v${{ steps.gitversion.outputs.semVer }}
           generateReleaseNotes: true
-          body: Release ${{ steps.gitversion.outputs.semVer }} of ${{ github.event.repository.name }}
+          body:
+            Release ${{ steps.gitversion.outputs.semVer }} of ${{
+            github.event.repository.name }}
