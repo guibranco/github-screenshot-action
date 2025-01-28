@@ -1,0 +1,4 @@
+theme: jekyll-theme-cayman
+title: '📷 :octocat: A GitHub action to take screenshots of websites'
+description: 'Take sites screenshots from GitHub Actions pipeline'
+show_downloads: true
