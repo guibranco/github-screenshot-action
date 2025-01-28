@@ -88,10 +88,12 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1.15.0
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: false
           skipIfReleaseExists: true
           draft: false
           makeLatest: true
+          prerelease: ${{ github.ref != 'refs/heads/main' }}
           tag: v${{ steps.gitversion.outputs.semVer }}
           name: Release v${{ steps.gitversion.outputs.semVer }}
           generateReleaseNotes: true
