@@ -1,5 +1,6 @@
 name: GitHub Screenshot Action
-description: An action to take screenshot(s) of websites from GitHub Actions pipelines.
+description:
+  An action to take screenshot(s) of websites from GitHub Actions pipelines.
 author: Guilherme Branco Stracini
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
