@@ -203,7 +203,8 @@ steps:
 ```
 
 For example workflow runs, check out the
-[Actions tab](https://github.com/guibranco/github-screenshot-action/actions)! :rocket:
+[Actions tab](https://github.com/guibranco/github-screenshot-action/actions)!
+:rocket:
 
 ## Usage
 
