@@ -85,14 +85,6 @@ function requireUtils$1 () {
 
 var hasRequiredCommand;
 
-/**
- * Initializes and returns the command module with required bindings.
- * This function checks if the required command has already been initialized.
- * If not, it sets up necessary bindings for command handling.
- *
- * @returns {Object} The command module with issue and issueCommand methods.
- * @throws {Error} Throws an error if command initialization fails.
- */
 function requireCommand () {
 	if (hasRequiredCommand) return command;
 	hasRequiredCommand = 1;
@@ -198,12 +190,6 @@ var fileCommand = {};
 
 var hasRequiredFileCommand;
 
-/**
- * Initializes and returns the file command object, ensuring that it is only created once.
- * This function is for internal use and is subject to change.
- *
- * @returns {Object} The file command object with methods for issuing file commands.
- */
 function requireFileCommand () {
 	if (hasRequiredFileCommand) return fileCommand;
 	hasRequiredFileCommand = 1;
@@ -8000,25 +7986,6 @@ function requireDispatcherBase () {
 var connect;
 var hasRequiredConnect;
 
-/**
- * Initializes and returns a connection function that can be used to establish
- * a connection to a server. This function handles both TLS and non-TLS connections
- * and manages session caching.
- *
- * @returns {Function} A connection function that takes connection parameters and a callback.
- *
- * @throws {InvalidArgumentError} If `maxCachedSessions` is provided and is not a positive integer or zero.
- *
- * @example
- * const connect = requireConnect();
- * connect({ hostname: 'example.com', protocol: 'https:' }, (err, socket) => {
- *   if (err) {
- *     console.error('Connection failed:', err);
- *   } else {
- *     console.log('Connected:', socket);
- *   }
- * });
- */
 function requireConnect () {
 	if (hasRequiredConnect) return connect;
 	hasRequiredConnect = 1;
@@ -8783,17 +8750,6 @@ function requireLlhttp_simdWasm () {
 var client;
 var hasRequiredClient;
 
-/**
- * Initializes and returns a client instance for handling HTTP requests.
- * This function ensures that only one client instance is created and reused.
- * It also sets up necessary configurations and error handling mechanisms.
- *
- * @returns {Client} The client instance for making HTTP requests.
- * @throws {InvalidArgumentError} If any of the provided options are invalid.
- * @example
- * const client = requireClient();
- * client.request('https://example.com', { method: 'GET' });
- */
 function requireClient () {
 	if (hasRequiredClient) return client;
 	hasRequiredClient = 1;
@@ -11967,19 +11923,6 @@ var apiRequest = {exports: {}};
 var readable;
 var hasRequiredReadable;
 
-/**
- * Creates a Readable stream that can be consumed in various formats.
- * This function initializes the stream and handles various read operations.
- *
- * @returns {Readable} An instance of the BodyReadable class.
- * @throws {RequestAbortedError} If the request is aborted during destruction.
- * @throws {NotSupportedError} If an unsupported operation is attempted.
- * @throws {InvalidArgumentError} If an invalid argument is provided.
- *
- * @example
- * const readableStream = requireReadable();
- * readableStream.text().then(data => console.log(data));
- */
 function requireReadable () {
 	if (hasRequiredReadable) return readable;
 	hasRequiredReadable = 1;
@@ -12841,13 +12784,6 @@ function requireApiStream () {
 var apiPipeline;
 var hasRequiredApiPipeline;
 
-/**
- * Initializes and returns the API pipeline function.
- * This function sets up the necessary classes and handlers for processing requests and responses
- * through a pipeline mechanism.
- *
- * @returns {Function} The API pipeline function that can be used to handle requests.
- */
 function requireApiPipeline () {
 	if (hasRequiredApiPipeline) return apiPipeline;
 	hasRequiredApiPipeline = 1;
@@ -14145,12 +14081,6 @@ function requirePluralizer () {
 var pendingInterceptorsFormatter;
 var hasRequiredPendingInterceptorsFormatter;
 
-/**
- * Retrieves an instance of the `PendingInterceptorsFormatter` class.
- * This function ensures that only one instance of the formatter is created.
- *
- * @returns {PendingInterceptorsFormatter} An instance of the `PendingInterceptorsFormatter` class.
- */
 function requirePendingInterceptorsFormatter () {
 	if (hasRequiredPendingInterceptorsFormatter) return pendingInterceptorsFormatter;
 	hasRequiredPendingInterceptorsFormatter = 1;
@@ -17124,12 +17054,6 @@ function requireRequest () {
 var fetch_1;
 var hasRequiredFetch;
 
-/**
- * Initializes and returns the fetch functionality, including the Fetch class and related methods.
- * This function sets up various dependencies and configurations required for making network requests.
- *
- * @returns {Object} An object containing the fetch function and Fetch class.
- */
 function requireFetch () {
 	if (hasRequiredFetch) return fetch_1;
 	hasRequiredFetch = 1;
@@ -23246,13 +23170,6 @@ function requireFrame () {
 var receiver;
 var hasRequiredReceiver;
 
-/**
- * Initializes and returns a receiver object that handles WebSocket frames.
- * This function sets up necessary channels for diagnostics and creates an instance
- * of the ByteParser class to process incoming WebSocket messages.
- *
- * @returns {Object} The receiver object containing the ByteParser class.
- */
 function requireReceiver () {
 	if (hasRequiredReceiver) return receiver;
 	hasRequiredReceiver = 1;
@@ -24452,27 +24369,6 @@ function requireLib () {
 	    return result;
 	};
 	var __awaiter = (lib && lib.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    /**
-	     * Adopts a value into a Promise if it is not already a Promise.
-	     *
-	     * This function checks if the provided value is an instance of the Promise class.
-	     * If it is, the value is returned as-is. If it is not, a new Promise is created
-	     * that resolves with the provided value.
-	     *
-	     * @param {*} value - The value to be adopted into a Promise.
-	     * @returns {Promise} A Promise that resolves with the provided value.
-	     *
-	     * @example
-	     * // Using adopt with a non-Promise value
-	     * const result = adopt(42);
-	     * result.then(value => console.log(value)); // Outputs: 42
-	     *
-	     * @example
-	     * // Using adopt with an existing Promise
-	     * const existingPromise = Promise.resolve(100);
-	     * const result = adopt(existingPromise);
-	     * result.then(value => console.log(value)); // Outputs: 100
-	     */
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25106,38 +25002,10 @@ var auth = {};
 
 var hasRequiredAuth;
 
-/**
- * Ensures that the authentication handlers are initialized and returns the authentication object.
- * This function checks if the required authentication has already been set up and initializes it if not.
- *
- * @returns {Object} The authentication object containing credential handlers.
- * @throws {Error} Throws an error if the authentication handlers are not implemented correctly.
- */
 function requireAuth () {
 	if (hasRequiredAuth) return auth;
 	hasRequiredAuth = 1;
 	var __awaiter = (auth && auth.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    /**
-	     * Adopts a value into a Promise if it is not already an instance of Promise.
-	     *
-	     * This function checks if the provided value is an instance of the Promise class.
-	     * If it is, the function returns the value as is. If it is not, it creates a new
-	     * Promise that resolves with the provided value.
-	     *
-	     * @param {any} value - The value to be adopted into a Promise.
-	     * @returns {Promise} A Promise that resolves with the provided value.
-	     *
-	     * @example
-	     * // Using adopt with a non-Promise value
-	     * const result = adopt(42);
-	     * result.then(value => console.log(value)); // Outputs: 42
-	     *
-	     * @example
-	     * // Using adopt with an existing Promise
-	     * const existingPromise = Promise.resolve(100);
-	     * const result = adopt(existingPromise);
-	     * result.then(value => console.log(value)); // Outputs: 100
-	     */
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25222,38 +25090,10 @@ function requireAuth () {
 
 var hasRequiredOidcUtils;
 
-/**
- * Initializes and returns the OIDC utilities.
- * This function checks if the required OIDC utilities have already been loaded.
- * If they have, it returns the existing instance; otherwise, it initializes them.
- *
- * @returns {Object} The OIDC utilities object containing the OidcClient class.
- */
 function requireOidcUtils () {
 	if (hasRequiredOidcUtils) return oidcUtils;
 	hasRequiredOidcUtils = 1;
 	var __awaiter = (oidcUtils && oidcUtils.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    /**
-	     * Adopts a value into a Promise if it is not already a Promise.
-	     *
-	     * This function checks if the provided value is an instance of the
-	     * Promise class. If it is, the value is returned as is. If it is not,
-	     * a new Promise is created that resolves with the provided value.
-	     *
-	     * @param {*} value - The value to be adopted into a Promise.
-	     * @returns {Promise} A Promise that resolves with the provided value.
-	     *
-	     * @example
-	     * // Using adopt with a non-Promise value
-	     * const result = adopt(42);
-	     * result.then(value => console.log(value)); // Outputs: 42
-	     *
-	     * @example
-	     * // Using adopt with an existing Promise
-	     * const existingPromise = Promise.resolve(100);
-	     * const result = adopt(existingPromise);
-	     * result.then(value => console.log(value)); // Outputs: 100
-	     */
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25336,43 +25176,11 @@ var summary = {};
 
 var hasRequiredSummary;
 
-/**
- * Initializes and returns a summary instance for managing job summaries in GitHub Actions.
- * This function checks if the required summary has already been initialized and returns it if so.
- * It sets up the necessary environment variables and imports required modules.
- *
- * @returns {Promise<Summary>} A promise that resolves to the summary instance.
- * @throws {Error} If the environment variable for the summary file path is not found or if the file does not have the correct permissions.
- *
- * @example
- * const summary = await requireSummary();
- */
 function requireSummary () {
 	if (hasRequiredSummary) return summary;
 	hasRequiredSummary = 1;
 	(function (exports) {
 		var __awaiter = (summary && summary.__awaiter) || function (thisArg, _arguments, P, generator) {
-		    /**
-		     * Adopts a given value into a Promise if it is not already a Promise.
-		     *
-		     * This function checks if the provided value is an instance of the Promise class.
-		     * If it is, the value is returned as-is. If it is not, a new Promise is created
-		     * that resolves with the provided value.
-		     *
-		     * @param {*} value - The value to be adopted into a Promise.
-		     * @returns {Promise} A Promise that resolves with the provided value.
-		     *
-		     * @example
-		     * // Example of adopting a non-Promise value
-		     * const result = adopt(42);
-		     * result.then(value => console.log(value)); // Outputs: 42
-		     *
-		     * @example
-		     * // Example of adopting an existing Promise
-		     * const existingPromise = Promise.resolve(100);
-		     * const result = adopt(existingPromise);
-		     * result.then(value => console.log(value)); // Outputs: 100
-		     */
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
 		        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25662,14 +25470,6 @@ var pathUtils = {};
 
 var hasRequiredPathUtils;
 
-/**
- * Initializes and returns the path utilities object. This function checks if the
- * required path utilities have already been loaded. If not, it sets up the necessary
- * bindings and imports for path manipulation functions.
- *
- * @returns {Object} An object containing path utility functions.
- * @throws {Error} Throws an error if the path utilities cannot be initialized.
- */
 function requirePathUtils () {
 	if (hasRequiredPathUtils) return pathUtils;
 	hasRequiredPathUtils = 1;
@@ -25773,27 +25573,6 @@ function requireIoUtil () {
 		    return result;
 		};
 		var __awaiter = (ioUtil && ioUtil.__awaiter) || function (thisArg, _arguments, P, generator) {
-		    /**
-		     * Adopts a value into a Promise if it is not already a Promise.
-		     *
-		     * This function checks if the provided value is an instance of the Promise class.
-		     * If it is, the value is returned as is. If it is not, a new Promise is created
-		     * that resolves with the provided value.
-		     *
-		     * @param {*} value - The value to be adopted into a Promise.
-		     * @returns {Promise} A Promise that resolves with the provided value.
-		     *
-		     * @example
-		     * // Using adopt with a non-Promise value
-		     * const result = adopt(42);
-		     * result.then(value => console.log(value)); // Outputs: 42
-		     *
-		     * @example
-		     * // Using adopt with an existing Promise
-		     * const existingPromise = Promise.resolve(100);
-		     * const result = adopt(existingPromise);
-		     * result.then(value => console.log(value)); // Outputs: 100
-		     */
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
 		        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -25985,27 +25764,6 @@ function requireIo () {
 	    return result;
 	};
 	var __awaiter = (io && io.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    /**
-	     * Adopts a value into a Promise if it is not already a Promise instance.
-	     *
-	     * This function checks if the provided value is an instance of the Promise class.
-	     * If it is, the value is returned as-is. If it is not, a new Promise is created
-	     * that resolves with the provided value.
-	     *
-	     * @param {any} value - The value to be adopted into a Promise.
-	     * @returns {Promise} A Promise that resolves with the given value.
-	     *
-	     * @example
-	     * // Using adopt with a non-Promise value
-	     * const result = adopt(42);
-	     * result.then(value => console.log(value)); // Outputs: 42
-	     *
-	     * @example
-	     * // Using adopt with an existing Promise
-	     * const existingPromise = Promise.resolve(100);
-	     * const result = adopt(existingPromise);
-	     * result.then(value => console.log(value)); // Outputs: 100
-	     */
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -26312,27 +26070,6 @@ function requireToolrunner () {
 	    return result;
 	};
 	var __awaiter = (toolrunner && toolrunner.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    /**
-	     * Adopts a value into a Promise if it is not already a Promise instance.
-	     *
-	     * This function checks if the provided value is an instance of the Promise class.
-	     * If it is, the value is returned as-is. If it is not, a new Promise is created
-	     * that resolves with the provided value.
-	     *
-	     * @param {*} value - The value to be adopted into a Promise.
-	     * @returns {Promise} A Promise that resolves with the provided value.
-	     *
-	     * @example
-	     * // Example of adopting a non-Promise value
-	     * const result = adopt(42);
-	     * result.then(value => console.log(value)); // Outputs: 42
-	     *
-	     * @example
-	     * // Example of adopting an existing Promise
-	     * const existingPromise = Promise.resolve(100);
-	     * const result = adopt(existingPromise);
-	     * result.then(value => console.log(value)); // Outputs: 100
-	     */
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -26958,25 +26695,6 @@ function requireExec () {
 	    return result;
 	};
 	var __awaiter = (exec && exec.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    /**
-	     * Adopts a given value into a Promise. If the value is already a Promise,
-	     * it returns the value as is. If the value is not a Promise, it creates
-	     * a new Promise that resolves with the given value.
-	     *
-	     * @param {*} value - The value to be adopted into a Promise.
-	     * @returns {Promise} A Promise that resolves with the given value.
-	     *
-	     * @example
-	     * // Example of adopting a non-Promise value
-	     * const result = adopt(42);
-	     * result.then(value => console.log(value)); // Outputs: 42
-	     *
-	     * @example
-	     * // Example of adopting an existing Promise
-	     * const existingPromise = Promise.resolve('Hello');
-	     * const adoptedPromise = adopt(existingPromise);
-	     * adoptedPromise.then(value => console.log(value)); // Outputs: Hello
-	     */
 	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 	    return new (P || (P = Promise))(function (resolve, reject) {
 	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -27064,18 +26782,6 @@ function requireExec () {
 
 var hasRequiredPlatform;
 
-/**
- * Ensures that the platform module is loaded and returns it.
- * If the platform module has already been loaded, it returns the existing instance.
- * This function initializes the platform module if it hasn't been loaded yet.
- *
- * @returns {Object} The platform module.
- * @throws {Error} Throws an error if the platform cannot be initialized.
- *
- * @example
- * const platform = requirePlatform();
- * console.log(platform);
- */
 function requirePlatform () {
 	if (hasRequiredPlatform) return platform;
 	hasRequiredPlatform = 1;
@@ -27104,26 +26810,6 @@ function requirePlatform () {
 		    return result;
 		};
 		var __awaiter = (platform && platform.__awaiter) || function (thisArg, _arguments, P, generator) {
-		    /**
-		     * Adopts a given value into a Promise. If the value is already a Promise,
-		     * it returns the value as is. Otherwise, it creates a new Promise that
-		     * resolves with the given value.
-		     *
-		     * @param {*} value - The value to be adopted. This can be any type,
-		     *                    including a Promise.
-		     * @returns {Promise} A Promise that resolves with the provided value.
-		     *
-		     * @example
-		     * // Example of adopting a non-Promise value
-		     * const result = adopt(42); // result is a Promise that resolves to 42
-		     *
-		     * @example
-		     * // Example of adopting an existing Promise
-		     * const existingPromise = Promise.resolve('Hello');
-		     * const result = adopt(existingPromise); // result is the same Promise
-		     *
-		     * @throws {TypeError} Throws an error if the value cannot be resolved.
-		     */
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
 		        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -27227,27 +26913,6 @@ function requireCore () {
 		    return result;
 		};
 		var __awaiter = (core && core.__awaiter) || function (thisArg, _arguments, P, generator) {
-		    /**
-		     * Adopts a value into a Promise if it is not already a Promise instance.
-		     *
-		     * This function checks if the provided value is an instance of the Promise class.
-		     * If it is, the value is returned as is. If it is not, a new Promise is created
-		     * that resolves with the provided value.
-		     *
-		     * @param {*} value - The value to be adopted into a Promise.
-		     * @returns {Promise} A Promise that resolves with the provided value.
-		     *
-		     * @example
-		     * // Example of adopting a non-Promise value
-		     * const result = adopt(42);
-		     * result.then(value => console.log(value)); // Outputs: 42
-		     *
-		     * @example
-		     * // Example of adopting an existing Promise
-		     * const existingPromise = Promise.resolve('Hello');
-		     * const result = adopt(existingPromise);
-		     * result.then(value => console.log(value)); // Outputs: Hello
-		     */
 		    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
 		    return new (P || (P = Promise))(function (resolve, reject) {
 		        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
