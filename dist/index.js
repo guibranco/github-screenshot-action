@@ -38,6 +38,14 @@ var utils$1 = {};
 
 var hasRequiredUtils$1;
 
+/**
+ * Retrieves the utility functions for command properties and value sanitization.
+ * This function ensures that the utilities are only initialized once and returns
+ * the initialized utilities object.
+ *
+ * @returns {Object} The utilities object containing methods for command properties
+ * and value sanitization.
+ */
 function requireUtils$1 () {
 	if (hasRequiredUtils$1) return utils$1;
 	hasRequiredUtils$1 = 1;
@@ -46,8 +54,29 @@ function requireUtils$1 () {
 	Object.defineProperty(utils$1, "__esModule", { value: true });
 	utils$1.toCommandProperties = utils$1.toCommandValue = void 0;
 	/**
-	 * Sanitizes an input into a string so it can be passed into issueCommand safely
-	 * @param input input to sanitize into a string
+	 * Sanitizes an input into a string format suitable for safe usage in the issueCommand function.
+	 *
+	 * This function checks the type of the input and converts it to a string. If the input is null or undefined,
+	 * it returns an empty string. If the input is already a string, it returns it as is. For other types of input,
+	 * it converts the input to a JSON string representation.
+	 *
+	 * @param {any} input - The input value to sanitize into a string. This can be of any type.
+	 * @returns {string} The sanitized string representation of the input.
+	 *
+	 * @example
+	 * // Example usage:
+	 * const commandValue = toCommandValue({ key: 'value' });
+	 * console.log(commandValue); // Outputs: '{"key":"value"}'
+	 *
+	 * @example
+	 * // Handling null input:
+	 * const commandValue = toCommandValue(null);
+	 * console.log(commandValue); // Outputs: ''
+	 *
+	 * @example
+	 * // Handling string input:
+	 * const commandValue = toCommandValue('command');
+	 * console.log(commandValue); // Outputs: 'command'
 	 */
 	function toCommandValue(input) {
 	    if (input === null || input === undefined) {
@@ -85,6 +114,14 @@ function requireUtils$1 () {
 
 var hasRequiredCommand;
 
+/**
+ * Initializes and returns a command object with utility functions for issuing commands.
+ * This function checks if the required command has already been initialized and creates
+ * necessary bindings for command handling if not.
+ *
+ * @returns {Object} The command object with methods to issue commands.
+ * @throws {Error} Throws an error if the command cannot be initialized.
+ */
 function requireCommand () {
 	if (hasRequiredCommand) return command;
 	hasRequiredCommand = 1;
@@ -190,6 +227,18 @@ var fileCommand = {};
 
 var hasRequiredFileCommand;
 
+/**
+ * Initializes and returns the `fileCommand` object, which provides methods for issuing file commands
+ * and preparing key-value messages. This function ensures that the `fileCommand` is only created once.
+ *
+ * @returns {Object} The `fileCommand` object containing methods for file operations.
+ *
+ * @throws {Error} Throws an error if there is an issue with the environment variable or file operations.
+ *
+ * @example
+ * const fileCommand = requireFileCommand();
+ * fileCommand.issueFileCommand('COMMAND_NAME', 'This is a message');
+ */
 function requireFileCommand () {
 	if (hasRequiredFileCommand) return fileCommand;
 	hasRequiredFileCommand = 1;
@@ -265,11 +314,34 @@ var proxy = {};
 
 var hasRequiredProxy;
 
+/**
+ * Initializes and returns a proxy object that provides methods for handling proxy URLs.
+ * This function checks for required proxy settings and defines properties and methods on the proxy.
+ *
+ * @returns {Object} The proxy object with methods to get proxy URLs and check bypass conditions.
+ */
 function requireProxy () {
 	if (hasRequiredProxy) return proxy;
 	hasRequiredProxy = 1;
 	Object.defineProperty(proxy, "__esModule", { value: true });
 	proxy.checkBypass = proxy.getProxyUrl = void 0;
+	/**
+	 * Retrieves the proxy URL based on the provided request URL.
+	 *
+	 * This function checks if the request URL uses SSL and determines the appropriate
+	 * proxy environment variable to use. If a valid proxy URL is found, it returns
+	 * a decoded version of that URL. If the request URL should bypass the proxy,
+	 * or if no valid proxy is configured, it returns undefined.
+	 *
+	 * @param {URL} reqUrl - The request URL for which to retrieve the proxy.
+	 * @returns {DecodedURL|undefined} The decoded proxy URL if available, otherwise undefined.
+	 *
+	 * @throws {Error} Throws an error if the proxy variable is malformed and cannot be decoded.
+	 *
+	 * @example
+	 * const proxy = getProxyUrl(new URL('https://example.com'));
+	 * console.log(proxy); // Outputs the decoded proxy URL or undefined if not applicable.
+	 */
 	function getProxyUrl(reqUrl) {
 	    const usingSsl = reqUrl.protocol === 'https:';
 	    if (checkBypass(reqUrl)) {
@@ -8186,11 +8258,47 @@ var utils = {};
 
 var hasRequiredUtils;
 
+/**
+ * Retrieves and initializes utility functions if they have not been loaded yet.
+ * This function ensures that the utilities are only defined once and provides
+ * access to the `enumToMap` function.
+ *
+ * @returns {Object} The utilities object containing utility functions.
+ *
+ * @throws {Error} Throws an error if the utilities cannot be initialized.
+ *
+ * @example
+ * const utils = requireUtils();
+ * const map = utils.enumToMap({ A: 1, B: 2, C: 'three' });
+ * console.log(map); // { A: 1, B: 2 }
+ */
 function requireUtils () {
 	if (hasRequiredUtils) return utils;
 	hasRequiredUtils = 1;
 	Object.defineProperty(utils, "__esModule", { value: true });
 	utils.enumToMap = void 0;
+	/**
+	 * Converts an enumeration object to a map containing only its numeric values.
+	 *
+	 * This function iterates over the properties of the provided object and constructs a new object
+	 * that includes only the properties whose values are of type 'number'.
+	 *
+	 * @param {Object} obj - The enumeration object to be converted.
+	 * @returns {Object} A new object containing only the numeric properties of the input object.
+	 *
+	 * @example
+	 * const Colors = {
+	 *   RED: 1,
+	 *   GREEN: 2,
+	 *   BLUE: 'three',
+	 *   YELLOW: 4
+	 * };
+	 *
+	 * const colorMap = enumToMap(Colors);
+	 * console.log(colorMap); // Output: { RED: 1, GREEN: 2, YELLOW: 4 }
+	 *
+	 * @throws {TypeError} Throws an error if the input is not an object.
+	 */
 	function enumToMap(obj) {
 	    const res = {};
 	    Object.keys(obj).forEach((key) => {
@@ -8208,6 +8316,44 @@ function requireUtils () {
 
 var hasRequiredConstants$2;
 
+/**
+ * Retrieves the constants used throughout the application.
+ * This function initializes and returns an object containing various constants,
+ * including error codes, HTTP methods, and character sets.
+ *
+ * @returns {Object} An object containing the constants.
+ * @property {Object} ERROR - An enumeration of error codes.
+ * @property {Object} TYPE - An enumeration of types (REQUEST, RESPONSE, BOTH).
+ * @property {Object} FLAGS - An enumeration of connection flags.
+ * @property {Object} LENIENT_FLAGS - An enumeration of lenient flags.
+ * @property {Object} METHODS - An enumeration of HTTP methods.
+ * @property {Array} METHODS_HTTP - An array of standard HTTP methods.
+ * @property {Array} METHODS_ICE - An array of ICE methods.
+ * @property {Array} METHODS_RTSP - An array of RTSP methods.
+ * @property {Object} METHOD_MAP - A map of HTTP methods to their corresponding values.
+ * @property {Object} H_METHOD_MAP - A map of HTTP methods that start with 'H'.
+ * @property {Object} FINISH - An enumeration of finish states.
+ * @property {Array} ALPHA - An array of alphabetic characters (A-Z, a-z).
+ * @property {Object} NUM_MAP - A map of numeric characters to their values.
+ * @property {Object} HEX_MAP - A map of hexadecimal characters to their values.
+ * @property {Array} NUM - An array of numeric characters as strings.
+ * @property {Array} ALPHANUM - An array combining ALPHA and NUM.
+ * @property {Array} MARK - An array of special characters used in URLs.
+ * @property {Array} USERINFO_CHARS - An array of characters allowed in user info sections of URLs.
+ * @property {Array} STRICT_URL_CHAR - An array of characters allowed in strict URL encoding.
+ * @property {Array} URL_CHAR - An array of characters allowed in URLs.
+ * @property {Array} HEX - An array of hexadecimal characters as strings.
+ * @property {Array} STRICT_TOKEN - An array of valid token characters as per RFC 2616.
+ * @property {Array} TOKEN - An array of valid token characters including space.
+ * @property {Array} HEADER_CHARS - An array of valid header characters.
+ * @property {Array} CONNECTION_TOKEN_CHARS - An array of valid connection token characters.
+ * @property {Object} MAJOR - A map representing major version numbers.
+ * @property {Object} MINOR - A map representing minor version numbers.
+ * @property {Object} HEADER_STATE - An enumeration representing various header states.
+ * @property {Object} SPECIAL_HEADERS - A mapping of special headers to their states.
+ *
+ * @throws {Error} Throws an error if constants cannot be initialized properly.
+ */
 function requireConstants$2 () {
 	if (hasRequiredConstants$2) return constants$2;
 	hasRequiredConstants$2 = 1;
@@ -24341,6 +24487,12 @@ function requireUndici () {
 
 var hasRequiredLib;
 
+/**
+ * Initializes and returns the library if it has not been initialized yet.
+ * This function ensures that the library is only created once and manages its binding.
+ *
+ * @returns {Object} The initialized library object.
+ */
 function requireLib () {
 	if (hasRequiredLib) return lib;
 	hasRequiredLib = 1;
@@ -24793,6 +24945,24 @@ function requireLib () {
 	    }
 	    getAgentDispatcher(serverUrl) {
 	        const parsedUrl = new URL(serverUrl);
+	        /**
+	         * Reads the body of a message asynchronously.
+	         *
+	         * This function listens for data events on the message stream and concatenates
+	         * the incoming data chunks into a single Buffer. Once the stream ends, it resolves
+	         * the promise with the complete body as a string.
+	         *
+	         * @returns {Promise<string>} A promise that resolves to the body of the message as a string.
+	         *
+	         * @example
+	         * readBody().then(body => {
+	         *     console.log(body); // Logs the complete message body.
+	         * }).catch(error => {
+	         *     console.error('Error reading body:', error);
+	         * });
+	         *
+	         * @throws {Error} Throws an error if there is an issue during the reading process.
+	         */
 	        const proxyUrl = pm.getProxyUrl(parsedUrl);
 	        const useProxy = proxyUrl && proxyUrl.hostname;
 	        if (!useProxy) {
@@ -24806,6 +24976,25 @@ function requireLib () {
 	        const usingSsl = info.parsedUrl.protocol === 'https:';
 	        info.httpModule = usingSsl ? https : http;
 	        const defaultPort = usingSsl ? 443 : 80;
+	        /**
+	         * Reads the body buffer from the message stream.
+	         *
+	         * This asynchronous function listens for data events on the message object,
+	         * collects the incoming data chunks, and resolves a promise with the concatenated
+	         * buffer once the stream ends.
+	         *
+	         * @returns {Promise<Buffer>} A promise that resolves to a Buffer containing
+	         * all the data received from the message stream.
+	         *
+	         * @example
+	         * readBodyBuffer().then((buffer) => {
+	         *     console.log('Received buffer:', buffer);
+	         * }).catch((error) => {
+	         *     console.error('Error reading body buffer:', error);
+	         * });
+	         *
+	         * @throws {Error} Throws an error if there is an issue with reading the stream.
+	         */
 	        info.options = {};
 	        info.options.host = info.parsedUrl.hostname;
 	        info.options.port = info.parsedUrl.port
@@ -24864,50 +25053,248 @@ function requireLib () {
 	            const agentOptions = {
 	                maxSockets,
 	                keepAlive: this._keepAlive,
+	                /**
+	                 * Sends an HTTP OPTIONS request to the specified URL.
+	                 *
+	                 * This method is used to retrieve the supported HTTP methods and other options
+	                 * available for a specific resource identified by the request URL.
+	                 *
+	                 * @param {string} requestUrl - The URL to which the OPTIONS request is sent.
+	                 * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	                 *
+	                 * @returns {Promise<Object>} A promise that resolves to the response object containing
+	                 *                            the server's response to the OPTIONS request.
+	                 *
+	                 * @throws {Error} Throws an error if the request fails or if the response is not valid.
+	                 *
+	                 * @example
+	                 * options('https://api.example.com/resource', { 'Authorization': 'Bearer token' })
+	                 *   .then(response => {
+	                 *     console.log(response);
+	                 *   })
+	                 *   .catch(error => {
+	                 *     console.error('Error:', error);
+	                 *   });
+	                 */
 	                proxy: Object.assign(Object.assign({}, ((proxyUrl.username || proxyUrl.password) && {
 	                    proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
 	                })), { host: proxyUrl.hostname, port: proxyUrl.port })
 	            };
 	            let tunnelAgent;
+	            /**
+	             * Sends a GET request to the specified URL.
+	             *
+	             * This method is an asynchronous function that utilizes the request method
+	             * to perform a GET operation. It can include additional headers if provided.
+	             *
+	             * @param {string} requestUrl - The URL to which the GET request is sent.
+	             * @param {Object} [additionalHeaders] - Optional additional headers to include in the request.
+	             * @returns {Promise<any>} A promise that resolves with the response from the server.
+	             *
+	             * @throws {Error} Throws an error if the request fails or if the URL is invalid.
+	             *
+	             * @example
+	             * get('https://api.example.com/data', { Authorization: 'Bearer token' })
+	             *   .then(response => {
+	             *     console.log(response);
+	             *   })
+	             *   .catch(error => {
+	             *     console.error('Error:', error);
+	             *   });
+	             */
 	            const overHttps = proxyUrl.protocol === 'https:';
 	            if (usingSsl) {
 	                tunnelAgent = overHttps ? tunnel.httpsOverHttps : tunnel.httpsOverHttp;
 	            }
 	            else {
+	                /**
+	                 * Sends a DELETE request to the specified URL.
+	                 *
+	                 * This method is used to remove a resource identified by the given request URL.
+	                 * It can include additional headers if required.
+	                 *
+	                 * @param {string} requestUrl - The URL of the resource to be deleted.
+	                 * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	                 *
+	                 * @returns {Promise<any>} A promise that resolves with the response from the server.
+	                 *
+	                 * @throws {Error} Throws an error if the request fails or if the URL is invalid.
+	                 *
+	                 * @example
+	                 * del('https://api.example.com/resource/1', { Authorization: 'Bearer token' })
+	                 *   .then(response => {
+	                 *     console.log('Resource deleted:', response);
+	                 *   })
+	                 *   .catch(error => {
+	                 *     console.error('Error deleting resource:', error);
+	                 *   });
+	                 */
 	                tunnelAgent = overHttps ? tunnel.httpOverHttps : tunnel.httpOverHttp;
 	            }
 	            agent = tunnelAgent(agentOptions);
 	            this._proxyAgent = agent;
 	        }
+	        /**
+	         * Sends a POST request to the specified URL with the provided data and optional headers.
+	         *
+	         * This method is asynchronous and returns a promise that resolves with the response from the server.
+	         *
+	         * @param {string} requestUrl - The URL to which the POST request is sent.
+	         * @param {Object} data - The data to be sent in the body of the POST request.
+	         * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	         *
+	         * @returns {Promise<Object>} A promise that resolves to the response from the server.
+	         *
+	         * @throws {Error} Throws an error if the request fails or if there is an issue with the network.
+	         *
+	         * @example
+	         * post('https://api.example.com/data', { key: 'value' }, { 'Authorization': 'Bearer token' })
+	         *   .then(response => {
+	         *     console.log('Success:', response);
+	         *   })
+	         *   .catch(error => {
+	         *     console.error('Error:', error);
+	         *   });
+	         */
 	        // if tunneling agent isn't assigned create a new agent
 	        if (!agent) {
 	            const options = { keepAlive: this._keepAlive, maxSockets };
 	            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
 	            this._agent = agent;
+	        /**
+	         * Sends a PATCH request to the specified URL with the provided data and additional headers.
+	         *
+	         * This method is asynchronous and returns a promise that resolves with the response from the server.
+	         *
+	         * @param {string} requestUrl - The URL to which the PATCH request is sent.
+	         * @param {Object} data - The data to be sent in the body of the PATCH request.
+	         * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	         *
+	         * @returns {Promise<Object>} A promise that resolves to the response from the server.
+	         *
+	         * @throws {Error} Throws an error if the request fails or if the response is not successful.
+	         *
+	         * @example
+	         * patch('https://api.example.com/resource/1', { name: 'Updated Name' }, { Authorization: 'Bearer token' })
+	         *   .then(response => {
+	         *     console.log('Response:', response);
+	         *   })
+	         *   .catch(error => {
+	         *     console.error('Error:', error);
+	         *   });
+	         */
 	        }
 	        if (usingSsl && this._ignoreSslError) {
 	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
 	            // http.RequestOptions doesn't expose a way to modify RequestOptions.agent.options
 	            // we have to cast it to any and change it directly
+	            /**
+	             * Sends a PUT request to the specified URL with the provided data and optional headers.
+	             *
+	             * This method is asynchronous and returns a promise that resolves with the response from the server.
+	             *
+	             * @param {string} requestUrl - The URL to which the PUT request is sent.
+	             * @param {Object} data - The data to be sent in the body of the request.
+	             * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	             *
+	             * @returns {Promise<Object>} A promise that resolves to the response object from the server.
+	             *
+	             * @throws {Error} Throws an error if the request fails or if there is an issue with the network.
+	             *
+	             * @example
+	             * put('https://api.example.com/resource', { key: 'value' }, { Authorization: 'Bearer token' })
+	             *   .then(response => {
+	             *     console.log('Success:', response);
+	             *   })
+	             *   .catch(error => {
+	             *     console.error('Error:', error);
+	             *   });
+	             */
 	            agent.options = Object.assign(agent.options || {}, {
 	                rejectUnauthorized: false
 	            });
 	        }
 	        return agent;
+	    /**
+	     * Sends a HEAD request to the specified URL.
+	     *
+	     * The HEAD method is used to retrieve the headers of a resource without fetching the entire resource.
+	     * This can be useful for checking if a resource exists or to obtain metadata about the resource.
+	     *
+	     * @param {string} requestUrl - The URL to which the HEAD request is sent.
+	     * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	     *
+	     * @returns {Promise<Object>} A promise that resolves to the response headers from the server.
+	     *
+	     * @throws {Error} Throws an error if the request fails or if the URL is invalid.
+	     *
+	     * @example
+	     * head('https://example.com/api/resource', { Authorization: 'Bearer token' })
+	     *   .then(responseHeaders => {
+	     *     console.log(responseHeaders);
+	     *   })
+	     *   .catch(error => {
+	     *     console.error('Error:', error);
+	     *   });
+	     */
 	    }
 	    _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
 	        let proxyAgent;
 	        if (this._keepAlive) {
 	            proxyAgent = this._proxyAgentDispatcher;
+	        /**
+	         * Sends a stream to a specified URL using the given HTTP verb.
+	         *
+	         * This function is an asynchronous operation that utilizes the
+	         * request method to perform the actual data transmission.
+	         *
+	         * @param {string} verb - The HTTP method to use for the request (e.g., 'GET', 'POST').
+	         * @param {string} requestUrl - The URL to which the request is sent.
+	         * @param {ReadableStream} stream - The stream of data to be sent in the request body.
+	         * @param {Object} [additionalHeaders] - Optional additional headers to include in the request.
+	         *
+	         * @returns {Promise<Response>} A promise that resolves to the response of the request.
+	         *
+	         * @throws {Error} Throws an error if the request fails or if invalid parameters are provided.
+	         *
+	         * @example
+	         * sendStream('POST', 'https://example.com/api', myStream, { 'Content-Type': 'application/json' })
+	         *   .then(response => {
+	         *       console.log('Response received:', response);
+	         *   })
+	         *   .catch(error => {
+	         *       console.error('Error sending stream:', error);
+	         *   });
+	         */
 	        }
 	        // if agent is already assigned use that agent.
 	        if (proxyAgent) {
 	            return proxyAgent;
 	        }
-	        const usingSsl = parsedUrl.protocol === 'https:';
-	        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
-	            token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
-	        })));
+	        /**
+	         * Retrieves a typed object from a specified endpoint.
+	         *
+	         * This function sends a GET request to the provided URL and processes the response.
+	         * If the resource is not found, the function will return null.
+	         * Other HTTP errors (4xx, 5xx) will cause the returned promise to be rejected.
+	         *
+	         * @param {string} requestUrl - The URL of the endpoint from which to fetch the JSON object.
+	         * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	         *
+	         * @returns {Promise<Object|null>} A promise that resolves to the parsed JSON object if successful,
+	         *                                   or null if the resource is not found.
+	         *
+	         * @throws {Error} Throws an error if the request fails due to network issues or server errors.
+	         *
+	         * @example
+	         * getJson('https://api.example.com/data')
+	         *   .then(data => {
+	         *     console.log(data);
+	         *   })
+	         *   .catch(error => {
+	         *     console.error('Error fetching data:', error);
+	         *   });
+	         */
 	        this._proxyAgentDispatcher = proxyAgent;
 	        if (usingSsl && this._ignoreSslError) {
 	            // we don't want to set NODE_TLS_REJECT_UNAUTHORIZED=0 since that will affect request for entire process
@@ -24915,6 +25302,25 @@ function requireLib () {
 	            // we have to cast it to any and change it directly
 	            proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
 	                rejectUnauthorized: false
+	            /**
+	             * Sends a JSON object to a specified URL using a POST request.
+	             *
+	             * This function serializes the provided object into a JSON string and sends it
+	             * to the given request URL. It also allows for additional headers to be included
+	             * in the request, defaulting to application/json if not specified.
+	             *
+	             * @param {string} requestUrl - The URL to which the JSON object will be sent.
+	             * @param {Object} obj - The object to be serialized and sent as JSON.
+	             * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	             *
+	             * @returns {Promise<Object>} A promise that resolves to the processed response object.
+	             *
+	             * @throws {Error} Throws an error if the request fails or if the response cannot be processed.
+	             *
+	             * @example
+	             * const response = await postJson('https://api.example.com/data', { key: 'value' });
+	             * console.log(response);
+	             */
 	            });
 	        }
 	        return proxyAgent;
@@ -24924,6 +25330,34 @@ function requireLib () {
 	            retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
 	            const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
 	            return new Promise(resolve => setTimeout(() => resolve(), ms));
+	        /**
+	         * Sends a JSON object to a specified URL using an HTTP PUT request.
+	         *
+	         * This function serializes the provided object into a JSON string and sends it
+	         * to the given request URL. It allows for additional headers to be specified,
+	         * which will be merged with default headers for content type and acceptance.
+	         *
+	         * @param {string} requestUrl - The URL to which the JSON object will be sent.
+	         * @param {Object} obj - The object to be serialized and sent as JSON.
+	         * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	         *
+	         * @returns {Promise<Object>} A promise that resolves to the processed response from the server.
+	         *
+	         * @throws {Error} Throws an error if the request fails or if the response cannot be processed.
+	         *
+	         * @example
+	         * const url = 'https://api.example.com/data';
+	         * const data = { key: 'value' };
+	         * const headers = { Authorization: 'Bearer token' };
+	         *
+	         * putJson(url, data, headers)
+	         *   .then(response => {
+	         *     console.log('Success:', response);
+	         *   })
+	         *   .catch(error => {
+	         *     console.error('Error:', error);
+	         *   });
+	         */
 	        });
 	    }
 	    _processResponse(res, options) {
@@ -24933,6 +25367,24 @@ function requireLib () {
 	                const response = {
 	                    statusCode,
 	                    result: null,
+	                    /**
+	                     * Sends a PATCH request to the specified URL with the provided JSON object and additional headers.
+	                     *
+	                     * This function converts the given object into a JSON string and sets the appropriate headers for the request.
+	                     * It then processes the response from the server and returns the result.
+	                     *
+	                     * @param {string} requestUrl - The URL to which the PATCH request is sent.
+	                     * @param {Object} obj - The JSON object to be sent in the request body.
+	                     * @param {Object} [additionalHeaders={}] - Optional additional headers to include in the request.
+	                     *
+	                     * @returns {Promise<Object>} A promise that resolves to the processed response from the server.
+	                     *
+	                     * @throws {Error} Throws an error if the request fails or if the response cannot be processed.
+	                     *
+	                     * @example
+	                     * const response = await patchJson('https://api.example.com/resource', { key: 'value' }, { Authorization: 'Bearer token' });
+	                     * console.log(response);
+	                     */
 	                    headers: {}
 	                };
 	                // not found leads to null obj returned
@@ -24942,11 +25394,29 @@ function requireLib () {
 	                // get the result from the body
 	                function dateTimeDeserializer(key, value) {
 	                    if (typeof value === 'string') {
-	                        const a = new Date(value);
-	                        if (!isNaN(a.valueOf())) {
-	                            return a;
-	                        }
-	                    }
+	                    /**
+	                     * Makes a raw HTTP request.
+	                     * This method serves as the foundation for other HTTP methods such as `get`, `post`, `patch`, and `delete`.
+	                     * It is recommended to use the higher-level methods instead of calling this directly.
+	                     *
+	                     * @param {string} verb - The HTTP verb to use for the request (e.g., GET, POST, PATCH, DELETE).
+	                     * @param {string} requestUrl - The URL to which the request is sent.
+	                     * @param {Object} [data] - The data to be sent with the request, if applicable.
+	                     * @param {Object} [headers] - Additional headers to include in the request.
+	                     *
+	                     * @returns {Promise<Object>} A promise that resolves to the response object from the HTTP request.
+	                     *
+	                     * @throws {Error} Throws an error if the client has already been disposed or if a redirect from HTTPS to HTTP is attempted without permission.
+	                     *
+	                     * @example
+	                     * const response = await request('GET', 'https://api.example.com/data', null, { 'Authorization': 'Bearer token' });
+	                     * console.log(response);
+	                     *
+	                     * @description
+	                     * This method handles retries for certain HTTP verbs and manages redirects according to specified options.
+	                     * If an authentication challenge is encountered, it attempts to handle it using registered authentication handlers.
+	                     * The method will also strip the authorization header if a redirect occurs to a different hostname.
+	                     */
 	                    return value;
 	                }
 	                let obj;
@@ -25002,6 +25472,14 @@ var auth = {};
 
 var hasRequiredAuth;
 
+/**
+ * Ensures that authentication is required and initializes the authentication handlers.
+ * This function checks if the required authentication has already been established.
+ * If not, it sets up the necessary credential handlers for Basic, Bearer, and Personal Access Token authentication.
+ *
+ * @returns {Object} The authentication object containing credential handlers.
+ * @throws {Error} Throws an error if the authentication process is not implemented.
+ */
 function requireAuth () {
 	if (hasRequiredAuth) return auth;
 	hasRequiredAuth = 1;
@@ -25030,11 +25508,25 @@ function requireAuth () {
 	    // This handler cannot handle 401
 	    canHandleAuthentication() {
 	        return false;
-	    }
-	    handleAuthentication() {
-	        return __awaiter(this, void 0, void 0, function* () {
-	            throw new Error('not implemented');
-	        });
+	    /**
+	     * Sends a raw request and returns a promise that resolves with the response or rejects with an error.
+	     *
+	     * This method wraps the `requestRawWithCallback` method, providing a promise-based interface for handling asynchronous requests.
+	     *
+	     * @param {Object} info - The information required to make the request. This may include parameters such as URL, headers, etc.
+	     * @param {Object} data - The data to be sent with the request. This can be any type of data that the request requires.
+	     * @returns {Promise<Object>} A promise that resolves with the response object if the request is successful.
+	     * @throws {Error} If an error occurs during the request, or if the response is not received as expected.
+	     *
+	     * @example
+	     * requestRaw({ url: 'https://api.example.com/data' }, { key: 'value' })
+	     *   .then(response => {
+	     *     console.log('Response:', response);
+	     *   })
+	     *   .catch(error => {
+	     *     console.error('Error:', error);
+	     *   });
+	     */
 	    }
 	}
 	auth.BasicCredentialHandler = BasicCredentialHandler;
@@ -25090,6 +25582,13 @@ function requireAuth () {
 
 var hasRequiredOidcUtils;
 
+/**
+ * Initializes and returns the OIDC utilities.
+ * This function checks if the required OIDC utilities are already loaded,
+ * and if not, it loads them and returns the `oidcUtils` object.
+ *
+ * @returns {Object} The OIDC utilities object containing the OidcClient class.
+ */
 function requireOidcUtils () {
 	if (hasRequiredOidcUtils) return oidcUtils;
 	hasRequiredOidcUtils = 1;
@@ -25176,6 +25675,16 @@ var summary = {};
 
 var hasRequiredSummary;
 
+/**
+ * Initializes and returns a summary instance for managing GitHub Actions job summaries.
+ * This function checks for the existence of a required summary and initializes it if not already done.
+ *
+ * @returns {Promise<Summary>} A promise that resolves to a Summary instance.
+ * @throws {Error} If the environment variable for the summary file path is not found or if the file does not exist.
+ *
+ * @example
+ * const summary = await requireSummary();
+ */
 function requireSummary () {
 	if (hasRequiredSummary) return summary;
 	hasRequiredSummary = 1;
@@ -25227,12 +25736,56 @@ function requireSummary () {
 		    }
 		    /**
 		     * Wraps content in an HTML tag, adding any HTML attributes
+		     /**
+		      * Performs an exponential backoff delay based on the retry number.
+		      * The delay time increases exponentially with each retry attempt,
+		      * up to a specified ceiling.
+		      *
+		      * @param {number} retryNumber - The current retry attempt number.
+		      *                               This value will be capped at the
+		      *                               ExponentialBackoffCeiling.
+		      * @returns {Promise<void>} A promise that resolves after the calculated
+		      *                          delay time has elapsed.
+		      *
+		      * @throws {Error} Throws an error if the retryNumber is negative.
+		      *
+		      * @example
+		      * // Example usage of _performExponentialBackoff
+		      * _performExponentialBackoff(3).then(() => {
+		      *   console.log('Waited for exponential backoff delay.');
+		      * });
+		      */
 		     *
 		     * @param {string} tag HTML tag to wrap
 		     * @param {string | null} content content within the tag
 		     * @param {[attribute: string]: string} attrs key-value list of HTML attributes to add
 		     *
 		     * @returns {string} content wrapped in HTML element
+		     */
+		    /**
+		     * Processes the HTTP response and returns a promise that resolves with the response details.
+		     *
+		     * This function handles the deserialization of the response body, including the option to
+		     * convert date strings into Date objects. It also manages different HTTP status codes,
+		     * resolving or rejecting the promise based on the status of the response.
+		     *
+		     * @param {Object} res - The HTTP response object containing the response details.
+		     * @param {Object} options - Options for processing the response.
+		     * @param {boolean} [options.deserializeDates=false] - If true, date strings in the response
+		     * will be converted to Date objects.
+		     *
+		     * @returns {Promise<Object>} A promise that resolves to an object containing:
+		     *   - statusCode {number} - The HTTP status code of the response.
+		     *   - result {Object|null} - The parsed response body or null if not found.
+		     *   - headers {Object} - The headers from the HTTP response.
+		     *
+		     * @throws {HttpClientError} Throws an error if the response status code indicates a failure
+		     * (status code > 299) or if there is an issue parsing the response body.
+		     *
+		     * @example
+		     * const response = await _processResponse(httpResponse, { deserializeDates: true });
+		     * console.log(response.statusCode); // Outputs the status code
+		     * console.log(response.result); // Outputs the parsed result
 		     */
 		    wrap(tag, content, attrs = {}) {
 		        const htmlAttrs = Object.entries(attrs)
@@ -25339,6 +25892,32 @@ function requireSummary () {
 		        const tag = ordered ? 'ol' : 'ul';
 		        const listItems = items.map(item => this.wrap('li', item)).join('');
 		        const element = this.wrap(tag, listItems);
+		        /**
+		         * Handles the authentication process for the user.
+		         *
+		         * This function is intended to be implemented in a derived class or
+		         * extended functionality. It currently throws an error indicating that
+		         * the implementation is not provided.
+		         *
+		         * @async
+		         * @throws {Error} Throws an error with the message 'not implemented'
+		         *                 if called without an implementation.
+		         *
+		         * @returns {Promise<void>} A promise that resolves when the authentication
+		         *                          process is completed, or rejects with an error
+		         *                          if not implemented.
+		         *
+		         * @example
+		         * // Example usage:
+		         * const auth = new AuthClass();
+		         * auth.handleAuthentication()
+		         *   .then(() => {
+		         *     console.log('Authentication successful');
+		         *   })
+		         *   .catch((error) => {
+		         *     console.error(error.message); // Outputs: 'not implemented'
+		         *   });
+		         */
 		        return this.addRaw(element).addEOL();
 		    }
 		    /**
@@ -25362,6 +25941,28 @@ function requireSummary () {
 		                return this.wrap(tag, data, attrs);
 		            })
 		                .join('');
+		            /**
+		             * Handles the authentication process asynchronously.
+		             *
+		             * This method is intended to be implemented in subclasses or extended
+		             * to provide specific authentication logic. Currently, it throws an
+		             * error indicating that the implementation is not provided.
+		             *
+		             * @async
+		             * @throws {Error} Throws an error with the message 'not implemented'
+		             *                 if called directly without an implementation.
+		             *
+		             * @returns {Promise<void>} A promise that resolves when the authentication
+		             *                          process is complete.
+		             *
+		             * @example
+		             * // Example of how to implement this method in a subclass
+		             * class MyAuthClass extends BaseAuthClass {
+		             *     async handleAuthentication() {
+		             *         // Custom authentication logic here
+		             *     }
+		             * }
+		             */
 		            return this.wrap('tr', cells);
 		        })
 		            .join('');
@@ -25385,6 +25986,29 @@ function requireSummary () {
 		     *
 		     * @param {string} src path to the image you to embed
 		     * @param {string} alt text description of the image
+		     /**
+		      * Handles the authentication process for the application.
+		      *
+		      * This function is intended to be implemented in subclasses or
+		      * extended functionality. It currently throws an error indicating
+		      * that the implementation is not provided.
+		      *
+		      * @async
+		      * @throws {Error} Throws an error with the message 'not implemented'
+		      *                 if the function is called without a proper implementation.
+		      *
+		      * @returns {Promise<void>} A promise that resolves when the authentication
+		      *                          process is completed. Since this function is not
+		      *                          implemented, it will always reject with an error.
+		      *
+		      * @example
+		      * // Example usage:
+		      * try {
+		      *     await handleAuthentication();
+		      * } catch (error) {
+		      *     console.error(error.message); // Outputs: 'not implemented'
+		      * }
+		      */
 		     * @param {SummaryImageOptions} options (optional) addition image attributes
 		     *
 		     * @returns {Summary} summary instance
@@ -25437,6 +26061,27 @@ function requireSummary () {
 		     *
 		     * @returns {Summary} summary instance
 		     */
+		    /**
+		     * Retrieves an ID Token from the specified URL.
+		     *
+		     * This method initiates an HTTP GET request to the provided `id_token_url`
+		     * and expects a JSON response containing an ID Token. If the request fails
+		     * or the response does not contain the expected ID Token, appropriate errors
+		     * will be thrown.
+		     *
+		     * @param {string} id_token_url - The URL from which to retrieve the ID Token.
+		     * @returns {Promise<string>} A promise that resolves to the ID Token if successful.
+		     * @throws {Error} Throws an error if the HTTP request fails or if the ID Token is not found in the response.
+		     *
+		     * @example
+		     * getCall('https://example.com/id_token')
+		     *   .then(token => {
+		     *     console.log('Retrieved ID Token:', token);
+		     *   })
+		     *   .catch(error => {
+		     *     console.error('Error retrieving ID Token:', error.message);
+		     *   });
+		     */
 		    addQuote(text, cite) {
 		        const attrs = Object.assign({}, (cite && { cite }));
 		        const element = this.wrap('blockquote', text, attrs);
@@ -25455,6 +26100,31 @@ function requireSummary () {
 		        return this.addRaw(element).addEOL();
 		    }
 		}
+		/**
+		 * Asynchronously retrieves an ID token from the action service.
+		 *
+		 * This method constructs a URL to request a new ID token. If an audience is provided,
+		 * it is URL-encoded and appended to the request URL. The method logs the ID token URL
+		 * for debugging purposes and then makes a call to retrieve the ID token. The retrieved
+		 * ID token is stored securely.
+		 *
+		 * @param {string} audience - The audience for which the ID token is requested.
+		 *                            If not provided, the request will be made without an audience parameter.
+		 * @returns {Promise<string>} A promise that resolves to the ID token string.
+		 *
+		 * @throws {Error} Throws an error if the request for the ID token fails,
+		 *                 including the error message from the caught exception.
+		 *
+		 * @example
+		 * // Example usage of getIDToken
+		 * getIDToken('my-audience')
+		 *   .then(token => {
+		 *     console.log('Retrieved ID Token:', token);
+		 *   })
+		 *   .catch(err => {
+		 *     console.error('Failed to retrieve ID Token:', err.message);
+		 *   });
+		 */
 		const _summary = new Summary();
 		/**
 		 * @deprecated use `core.summary`
@@ -25470,6 +26140,18 @@ var pathUtils = {};
 
 var hasRequiredPathUtils;
 
+/**
+ * Retrieves the path utilities module, ensuring it is only created once.
+ * This function checks if the path utilities have already been initialized,
+ * and if not, it sets up the necessary bindings and imports.
+ *
+ * @returns {Object} The path utilities object containing methods for path manipulation.
+ * @throws {Error} Throws an error if the path utilities cannot be initialized.
+ *
+ * @example
+ * const pathUtils = requirePathUtils();
+ * const posixPath = pathUtils.toPosixPath('C:\\Users\\Example');
+ */
 function requirePathUtils () {
 	if (hasRequiredPathUtils) return pathUtils;
 	hasRequiredPathUtils = 1;
@@ -25594,6 +26276,26 @@ function requireIoUtil () {
 		// See https://github.com/nodejs/node/blob/d0153aee367422d0858105abec186da4dff0a0c5/deps/uv/include/uv/win.h#L691
 		exports.UV_FS_O_EXLOCK = 0x10000000;
 		exports.READONLY = fs.constants.O_RDONLY;
+		/**
+		 * Checks if a file or directory exists at the specified path.
+		 *
+		 * This function uses asynchronous file system operations to determine
+		 * the existence of a file or directory. If the path does not exist,
+		 * it returns false. If an error occurs that is not related to the
+		 * non-existence of the path, the error is thrown.
+		 *
+		 * @param {string} fsPath - The file system path to check for existence.
+		 * @returns {Promise<boolean>} A promise that resolves to true if the
+		 * file or directory exists, and false if it does not.
+		 *
+		 * @throws {Error} Throws an error if an unexpected error occurs while
+		 * checking the file system.
+		 *
+		 * @example
+		 * exists('/path/to/file.txt').then(exists => {
+		 *   console.log(exists ? 'File exists' : 'File does not exist');
+		 * });
+		 */
 		function exists(fsPath) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        try {
@@ -25609,6 +26311,29 @@ function requireIoUtil () {
 		    });
 		}
 		exports.exists = exists;
+		/**
+		 * Checks if the given file system path is a directory.
+		 *
+		 * This function can utilize either the `stat` or `lstat` method to retrieve
+		 * the file system statistics, depending on the value of the `useStat` parameter.
+		 * If `useStat` is true, it uses `stat`, which follows symlinks. If false, it uses
+		 * `lstat`, which does not follow symlinks.
+		 *
+		 * @param {string} fsPath - The file system path to check.
+		 * @param {boolean} [useStat=false] - A flag indicating whether to use `stat` (true) or `lstat` (false).
+		 * @returns {Promise<boolean>} A promise that resolves to true if the path is a directory, otherwise false.
+		 *
+		 * @throws {Error} Throws an error if the file system operations fail.
+		 *
+		 * @example
+		 * isDirectory('/path/to/directory')
+		 *   .then(isDir => {
+		 *     console.log(isDir); // true if it's a directory, false otherwise
+		 *   })
+		 *   .catch(err => {
+		 *     console.error('Error checking directory:', err);
+		 *   });
+		 */
 		function isDirectory(fsPath, useStat = false) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        const stats = useStat ? yield exports.stat(fsPath) : yield exports.lstat(fsPath);
@@ -25729,6 +26454,16 @@ function requireIoUtil () {
 		        ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
 		}
 		// Get the path of cmd.exe in windows
+		/**
+		 * Retrieves the command line executable path from the environment variables.
+		 * If the 'COMSPEC' environment variable is not set, it defaults to 'cmd.exe'.
+		 *
+		 * @returns {string} The path to the command line executable.
+		 *
+		 * @example
+		 * const cmdPath = getCmdPath();
+		 * console.log(cmdPath); // Outputs the path to cmd.exe or the value of COMSPEC
+		 */
 		function getCmdPath() {
 		    var _a;
 		    return (_a = process.env['COMSPEC']) !== null && _a !== void 0 ? _a : `cmd.exe`;
@@ -25778,12 +26513,29 @@ function requireIo () {
 	const path = __importStar(require$$1$5);
 	const ioUtil = __importStar(requireIoUtil());
 	/**
-	 * Copies a file or folder.
-	 * Based off of shelljs - https://github.com/shelljs/shelljs/blob/9237f66c52e5daa40458f94f9565e18e8132f5a6/src/cp.js
+	 * Copies a file or folder from the specified source path to the destination path.
+	 * This function is based on shelljs and provides options for controlling the copy behavior.
 	 *
-	 * @param     source    source path
-	 * @param     dest      destination path
-	 * @param     options   optional. See CopyOptions.
+	 * @param {string} source - The path to the source file or directory to be copied.
+	 * @param {string} dest - The path to the destination where the source will be copied.
+	 * @param {Object} [options={}] - Optional parameters to customize the copy operation.
+	 * @param {boolean} [options.force=false] - If true, will overwrite existing files at the destination.
+	 * @param {boolean} [options.recursive=false] - If true, allows copying of directories recursively.
+	 * @param {boolean} [options.copySourceDirectory=false] - If true, will copy the source directory into the destination if the destination is a directory.
+	 *
+	 * @throws {Error} Throws an error if the source does not exist.
+	 * @throws {Error} Throws an error if attempting to copy a directory without the recursive flag set.
+	 * @throws {Error} Throws an error if the source and destination are the same file.
+	 *
+	 * @returns {Promise<void>} A promise that resolves when the copy operation is complete.
+	 *
+	 * @example
+	 * // Copy a file
+	 * await cp('path/to/source.txt', 'path/to/destination.txt');
+	 *
+	 * @example
+	 * // Copy a directory recursively
+	 * await cp('path/to/sourceDir', 'path/to/destinationDir', { recursive: true });
 	 */
 	function cp(source, dest, options = {}) {
 	    return __awaiter(this, void 0, void 0, function* () {
@@ -25820,11 +26572,28 @@ function requireIo () {
 	}
 	io.cp = cp;
 	/**
-	 * Moves a path.
+	 * Moves a file or directory from a source path to a destination path.
 	 *
-	 * @param     source    source path
-	 * @param     dest      destination path
-	 * @param     options   optional. See MoveOptions.
+	 * This function checks if the destination already exists. If it does,
+	 * it can either overwrite it based on the provided options or throw an
+	 * error if the force option is not set.
+	 *
+	 * @param {string} source - The source path of the file or directory to move.
+	 * @param {string} dest - The destination path where the file or directory should be moved.
+	 * @param {MoveOptions} [options={}] - Optional parameters for moving the file.
+	 * @param {boolean} [options.force=true] - If true, will overwrite the destination if it exists.
+	 *
+	 * @throws {Error} Throws an error if the destination already exists and force is not set to true.
+	 *
+	 * @returns {Promise<void>} A promise that resolves when the move operation is complete.
+	 *
+	 * @example
+	 * // Move a file from 'source.txt' to 'destination.txt'
+	 * await mv('source.txt', 'destination.txt', { force: true });
+	 *
+	 * @example
+	 * // Move a directory and overwrite if it exists
+	 * await mv('myFolder', 'newFolder', { force: true });
 	 */
 	function mv(source, dest, options = {}) {
 	    return __awaiter(this, void 0, void 0, function* () {
@@ -25850,9 +26619,29 @@ function requireIo () {
 	}
 	io.mv = mv;
 	/**
-	 * Remove a path recursively with force
+	 * Remove a path recursively with force.
 	 *
-	 * @param inputPath path to remove
+	 * This function deletes the specified path and all its contents. It handles
+	 * the removal process asynchronously and includes error handling for invalid
+	 * file paths on Windows systems.
+	 *
+	 * @param {string} inputPath - The path to remove. This should be a valid
+	 *                             file or directory path. On Windows, the path
+	 *                             must not contain any of the following characters:
+	 *                             `*`, `"`, `<`, `>`, or `|`.
+	 *
+	 * @throws {Error} Throws an error if the path contains invalid characters
+	 *                 on Windows or if the removal process fails.
+	 *
+	 * @returns {Promise<void>} A promise that resolves when the removal is
+	 *                          complete. If the path does not exist, the error
+	 *                          is silent.
+	 *
+	 * @example
+	 * // Remove a directory and its contents
+	 * rmRF('/path/to/directory')
+	 *   .then(() => console.log('Directory removed successfully'))
+	 *   .catch(err => console.error(err));
 	 */
 	function rmRF(inputPath) {
 	    return __awaiter(this, void 0, void 0, function* () {
@@ -25927,9 +26716,22 @@ function requireIo () {
 	}
 	io.which = which;
 	/**
-	 * Returns a list of all occurrences of the given tool on the system path.
+	 * Asynchronously searches for the specified tool in the system's PATH and returns a list of all occurrences.
 	 *
-	 * @returns   Promise<string[]>  the paths of the tool
+	 * This function checks if the provided tool is rooted or if it includes path separators, and handles
+	 * Windows-specific extensions if applicable. It returns an array of paths where the tool is found, or
+	 * an empty array if the tool is not found or invalid.
+	 *
+	 * @param {string} tool - The name of the tool to search for in the system PATH. This parameter is required.
+	 * @throws {Error} Throws an error if the 'tool' parameter is not provided.
+	 * @returns {Promise<string[]>} A promise that resolves to an array of strings representing the paths of the tool.
+	 *
+	 * @example
+	 * findInPath('node').then(paths => {
+	 *     console.log(paths); // Outputs an array of paths where 'node' is found
+	 * }).catch(error => {
+	 *     console.error(error); // Handles any errors that occur during the search
+	 * });
 	 */
 	function findInPath(tool) {
 	    return __awaiter(this, void 0, void 0, function* () {
@@ -25991,6 +26793,30 @@ function requireIo () {
 	        : Boolean(options.copySourceDirectory);
 	    return { force, recursive, copySourceDirectory };
 	}
+	/**
+	 * Recursively copies a directory from the source path to the destination path.
+	 *
+	 * This function ensures that the recursive copying does not exceed a maximum depth
+	 * to prevent runaway recursion. It creates the destination directory if it does not
+	 * exist and copies all files and subdirectories from the source directory to the
+	 * destination directory.
+	 *
+	 * @param {string} sourceDir - The path of the source directory to copy from.
+	 * @param {string} destDir - The path of the destination directory to copy to.
+	 * @param {number} currentDepth - The current depth of recursion, should start at 0.
+	 * @param {boolean} force - A flag indicating whether to overwrite existing files.
+	 *
+	 * @returns {Promise<void>} A promise that resolves when the copy operation is complete.
+	 *
+	 * @throws {Error} Throws an error if the source directory does not exist or if there
+	 *                 are issues reading or writing files.
+	 *
+	 * @example
+	 * // Copy a directory recursively with overwriting enabled
+	 * cpDirRecursive('/path/to/source', '/path/to/destination', 0, true)
+	 *   .then(() => console.log('Copy completed successfully'))
+	 *   .catch(err => console.error('Error during copy:', err));
+	 */
 	function cpDirRecursive(sourceDir, destDir, currentDepth, force) {
 	    return __awaiter(this, void 0, void 0, function* () {
 	        // Ensure there is not a run away recursive copy
@@ -26016,6 +26842,32 @@ function requireIo () {
 	    });
 	}
 	// Buffered file copy
+	/**
+	 * Asynchronously copies a file from the source path to the destination path.
+	 * If the destination file exists and the `force` parameter is set to true,
+	 * it will overwrite the existing file. If the source file is a symbolic link,
+	 * it will handle the symbolic link appropriately.
+	 *
+	 * @param {string} srcFile - The path to the source file to be copied.
+	 * @param {string} destFile - The path to the destination file where the source file will be copied.
+	 * @param {boolean} [force=false] - A flag indicating whether to overwrite the destination file if it exists.
+	 *
+	 * @returns {Promise<void>} A promise that resolves when the file has been copied successfully.
+	 *
+	 * @throws {Error} Throws an error if there is an issue accessing the source or destination files.
+	 *
+	 * @example
+	 * // Copy a file without forcing overwrite
+	 * copyFile('path/to/source.txt', 'path/to/destination.txt')
+	 *   .then(() => console.log('File copied successfully'))
+	 *   .catch(err => console.error('Error copying file:', err));
+	 *
+	 * @example
+	 * // Force overwrite of an existing file
+	 * copyFile('path/to/source.txt', 'path/to/destination.txt', true)
+	 *   .then(() => console.log('File copied and overwritten successfully'))
+	 *   .catch(err => console.error('Error copying file:', err));
+	 */
 	function copyFile(srcFile, destFile, force) {
 	    return __awaiter(this, void 0, void 0, function* () {
 	        if ((yield ioUtil.lstat(srcFile)).isSymbolicLink()) {
@@ -26548,15 +27400,26 @@ function requireToolrunner () {
 	/**
 	 * Convert an arg string to an array of args. Handles escaping
 	 *
-	 * @param    argString   string of arguments
-	 * @returns  string[]    array of arguments
-	 */
-	function argStringToArray(argString) {
-	    const args = [];
-	    let inQuotes = false;
-	    let escaped = false;
-	    let arg = '';
-	    function append(c) {
+	        /**
+	         * Executes a specified tool and streams the output to the live console.
+	         * This function returns a promise that resolves with the return code of the executed tool.
+	         *
+	         * @param {string} tool - The path to the tool to execute. This can be an absolute or relative path.
+	         * @param {ExecOptions} [options] - Optional execution options. Refer to the ExecOptions interface for details.
+	         * @returns {Promise<number>} A promise that resolves to the exit code of the executed tool.
+	         *
+	         * @throws {Error} If the specified current working directory (cwd) does not exist.
+	         * @throws {Error} If the child process is missing stdin when input is provided.
+	         *
+	         * @example
+	         * exec('myTool', { cwd: '/path/to/dir', silent: false })
+	         *   .then(exitCode => {
+	         *     console.log(`Tool exited with code: ${exitCode}`);
+	         *   })
+	         *   .catch(err => {
+	         *     console.error(`Error executing tool: ${err.message}`);
+	         *   });
+	         */
 	        // we only escape double quotes.
 	        if (escaped && c !== '"') {
 	            arg += '\\';
@@ -26782,6 +27645,17 @@ function requireExec () {
 
 var hasRequiredPlatform;
 
+/**
+ * Ensures the platform module is initialized and returns it.
+ * If the platform has already been initialized, it returns the existing instance.
+ *
+ * @returns {Object} The platform module.
+ * @throws {Error} Throws an error if the platform cannot be initialized.
+ *
+ * @example
+ * const platform = requirePlatform();
+ * console.log(platform);
+ */
 function requirePlatform () {
 	if (hasRequiredPlatform) return platform;
 	hasRequiredPlatform = 1;
@@ -26851,6 +27725,29 @@ function requirePlatform () {
 		});
 		const getLinuxInfo = () => __awaiter(void 0, void 0, void 0, function* () {
 		    const { stdout } = yield exec.getExecOutput('lsb_release', ['-i', '-r', '-s'], {
+		        /**
+		         * Asynchronously retrieves information about the Windows operating system.
+		         *
+		         * This function executes PowerShell commands to obtain the version and name of the
+		         * operating system installed on the machine. It returns an object containing the
+		         * operating system's name and version.
+		         *
+		         * @async
+		         * @function getWindowsInfo
+		         * @returns {Promise<Object>} A promise that resolves to an object with the following properties:
+		         *   - {string} name - The name of the operating system.
+		         *   - {string} version - The version of the operating system.
+		         *
+		         * @throws {Error} Throws an error if the PowerShell commands fail to execute or return unexpected results.
+		         *
+		         * @example
+		         * getWindowsInfo().then(info => {
+		         *   console.log(`OS Name: ${info.name}`);
+		         *   console.log(`OS Version: ${info.version}`);
+		         * }).catch(error => {
+		         *   console.error('Failed to retrieve Windows information:', error);
+		         * });
+		         */
 		        silent: true
 		    });
 		    const [name, version] = stdout.trim().split('\n');
@@ -26863,7 +27760,77 @@ function requirePlatform () {
 		exports.arch = os_1.default.arch();
 		exports.isWindows = exports.platform === 'win32';
 		exports.isMacOS = exports.platform === 'darwin';
+		/**
+		 * Asynchronously retrieves the macOS version and name using the `sw_vers` command.
+		 *
+		 * This function executes the `sw_vers` command to obtain the macOS product version and name.
+		 * It returns an object containing the name and version of the operating system.
+		 *
+		 * @async
+		 * @function getMacOsInfo
+		 * @returns {Promise<{ name: string, version: string }>} An object containing the macOS name and version.
+		 * @throws {Error} Throws an error if the command execution fails or if the output cannot be parsed.
+		 *
+		 * @example
+		 * getMacOsInfo().then(info => {
+		 *   console.log(`macOS Name: ${info.name}`);
+		 *   console.log(`macOS Version: ${info.version}`);
+		 * }).catch(error => {
+		 *   console.error('Error retrieving macOS info:', error);
+		 * });
+		 */
 		exports.isLinux = exports.platform === 'linux';
+		/**
+		 * Asynchronously retrieves system details based on the current platform.
+		 *
+		 * This function checks the operating system type (Windows, macOS, or Linux)
+		 * and gathers relevant system information, including platform, architecture,
+		 * and boolean flags indicating the operating system type.
+		 *
+		 * @async
+		 * @function getDetails
+		 * @returns {Promise<Object>} A promise that resolves to an object containing
+		 *                            system details such as:
+		 /**
+		  * Asynchronously retrieves the Linux distribution name and version.
+		  *
+		  * This function executes the `lsb_release` command to obtain the
+		  * distribution information. It captures the output and parses it
+		  * to return an object containing the name and version of the Linux
+		  * distribution.
+		  *
+		  * @async
+		  * @function getLinuxInfo
+		  * @returns {Promise<Object>} A promise that resolves to an object with
+		  *                            the following properties:
+		  *                            - {string} name - The name of the Linux distribution.
+		  *                            - {string} version - The version of the Linux distribution.
+		  *
+		  * @throws {Error} Throws an error if the command execution fails or if
+		  *                 the output cannot be parsed correctly.
+		  *
+		  * @example
+		  * getLinuxInfo().then(info => {
+		  *   console.log(`Linux Distribution: ${info.name}, Version: ${info.version}`);
+		  * }).catch(error => {
+		  *   console.error('Error retrieving Linux info:', error);
+		  * });
+		  */
+		 *                            - platform: The name of the operating system platform.
+		 *                            - arch: The architecture of the operating system.
+		 *                            - isWindows: A boolean indicating if the OS is Windows.
+		 *                            - isMacOS: A boolean indicating if the OS is macOS.
+		 *                            - isLinux: A boolean indicating if the OS is Linux.
+		 *
+		 * @throws {Error} Throws an error if the system information cannot be retrieved.
+		 *
+		 * @example
+		 * getDetails().then(details => {
+		 *   console.log(details);
+		 * }).catch(error => {
+		 *   console.error('Error retrieving system details:', error);
+		 * });
+		 */
 		function getDetails() {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        return Object.assign(Object.assign({}, (yield (exports.isWindows
@@ -27204,6 +28171,28 @@ function requireCore () {
 		    return process.env[`STATE_${name}`] || '';
 		}
 		exports.getState = getState;
+		/**
+		 * Asynchronously retrieves the ID token for a specified audience.
+		 *
+		 * This function acts as a wrapper around the OidcClient's getIDToken method,
+		 * allowing for easier access to the ID token in an asynchronous context.
+		 *
+		 * @param {string} aud - The audience for which the ID token is requested.
+		 *                       This should be a valid identifier for the intended recipient.
+		 *
+		 * @returns {Promise<string>} A promise that resolves to the ID token string.
+		 *
+		 * @throws {Error} Throws an error if the ID token retrieval fails.
+		 *
+		 * @example
+		 * getIDToken('your-audience-id')
+		 *   .then(token => {
+		 *     console.log('Retrieved ID Token:', token);
+		 *   })
+		 *   .catch(error => {
+		 *     console.error('Error retrieving ID Token:', error);
+		 *   });
+		 */
 		function getIDToken(aud) {
 		    return __awaiter(this, void 0, void 0, function* () {
 		        return yield oidc_utils_1.OidcClient.getIDToken(aud);
