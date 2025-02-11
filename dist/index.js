@@ -1466,6 +1466,34 @@ function requireUtil$6 () {
 	}
 
 	let ReadableStream;
+	/**
+	 * Creates a ReadableStream from an iterable object.
+	 *
+	 * This function takes an iterable and returns a ReadableStream that can be consumed
+	 * asynchronously. It supports both synchronous and asynchronous iterables.
+	 *
+	 * @param {Iterable|AsyncIterable} iterable - The iterable or async iterable to convert into a ReadableStream.
+	 * @returns {ReadableStream} A ReadableStream that emits the values from the provided iterable.
+	 *
+	 * @throws {TypeError} Throws an error if the input is not an iterable or async iterable.
+	 *
+	 * @example
+	 * const stream = ReadableStreamFrom([1, 2, 3]);
+	 * const reader = stream.getReader();
+	 * reader.read().then(({ done, value }) => {
+	 *   console.log(value); // Outputs: 1
+	 * });
+	 *
+	 * @example
+	 * const asyncIterable = {
+	 *   async *[Symbol.asyncIterator]() {
+	 *     yield 1;
+	 *     yield 2;
+	 *     yield 3;
+	 *   }
+	 * };
+	 * const stream = ReadableStreamFrom(asyncIterable);
+	 */
 	function ReadableStreamFrom (iterable) {
 	  if (!ReadableStream) {
 	    ReadableStream = require$$14.ReadableStream;
@@ -3555,6 +3583,14 @@ function requireGlobal$1 () {
 var util$5;
 var hasRequiredUtil$5;
 
+/**
+ * Initializes and returns a utility object containing various helper functions
+ * for handling HTTP requests, responses, and related operations.
+ *
+ * @returns {Object} The utility object with methods for request and response handling.
+ *
+ * @throws {Error} Throws an error if the required modules cannot be loaded.
+ */
 function requireUtil$5 () {
 	if (hasRequiredUtil$5) return util$5;
 	hasRequiredUtil$5 = 1;
@@ -4523,6 +4559,26 @@ function requireUtil$5 () {
 	/** @type {ReadableStream} */
 	let ReadableStream = globalThis.ReadableStream;
 
+	/**
+	 * Determines if the provided object is a readable stream-like object.
+	 *
+	 * A readable stream-like object is defined as either an instance of
+	 * `ReadableStream` or an object that has a `Symbol.toStringTag` of
+	 * 'ReadableStream' and implements a `tee` method.
+	 *
+	 * @param {Object} stream - The object to be tested for readability.
+	 * @returns {boolean} Returns `true` if the object is a readable stream-like,
+	 *                    otherwise returns `false`.
+	 *
+	 * @throws {TypeError} Throws a TypeError if the input is not an object.
+	 *
+	 * @example
+	 * const myStream = new ReadableStream();
+	 * console.log(isReadableStreamLike(myStream)); // true
+	 *
+	 * const notAStream = {};
+	 * console.log(isReadableStreamLike(notAStream)); // false
+	 */
 	function isReadableStreamLike (stream) {
 	  if (!ReadableStream) {
 	    ReadableStream = require$$14.ReadableStream;
@@ -6639,6 +6695,18 @@ function requireFormdata () {
 var body;
 var hasRequiredBody;
 
+/**
+ * The `requireBody` function is responsible for extracting and managing the body of a request or response.
+ * It handles various types of body sources, including strings, blobs, streams, and form data.
+ *
+ * @returns {Object} An object containing the extracted body and its associated content type.
+ *
+ * @throws {TypeError} Throws a TypeError if the body is disturbed or locked when keepalive is true.
+ *
+ * @example
+ * const [body, type] = requireBody();
+ * console.log(type); // Outputs the content type of the body.
+ */
 function requireBody () {
 	if (hasRequiredBody) return body;
 	hasRequiredBody = 1;
@@ -6681,6 +6749,28 @@ function requireBody () {
 	const textDecoder = new TextDecoder();
 
 	// https://fetch.spec.whatwg.org/#concept-bodyinit-extract
+	/**
+	 * Extracts the body from a given object and returns it along with its content type.
+	 *
+	 * This function handles various types of input objects, including ReadableStream,
+	 * Blob, ArrayBuffer, URLSearchParams, FormData, and others. It creates a stream
+	 * from the input and determines the appropriate content type based on the input's
+	 * characteristics.
+	 *
+	 * @param {Object} object - The input object from which to extract the body.
+	 * @param {boolean} [keepalive=false] - A flag indicating whether the stream can be kept alive.
+	 * @returns {[Object, string|null]} An array containing the body object and its content type.
+	 *
+	 * @throws {TypeError} If `keepalive` is true and the object is disturbed or locked.
+	 *
+	 * @example
+	 * const [body, type] = extractBody(new Blob(['Hello, world!']), true);
+	 * console.log(type); // 'application/octet-stream'
+	 *
+	 * @example
+	 * const [body, type] = extractBody(new URLSearchParams({ key: 'value' }));
+	 * console.log(type); // 'application/x-www-form-urlencoded;charset=UTF-8'
+	 */
 	function extractBody (object, keepalive = false) {
 	  if (!ReadableStream) {
 	    ReadableStream = require$$14.ReadableStream;
@@ -6901,6 +6991,26 @@ function requireBody () {
 	}
 
 	// https://fetch.spec.whatwg.org/#bodyinit-safely-extract
+	/**
+	 * Safely extracts the body and `Content-Type` value from a given object,
+	 * which can be a byte sequence or a BodyInit object.
+	 *
+	 * This function checks if the provided object is a ReadableStream and ensures
+	 * that the stream is neither disturbed nor locked before proceeding with the extraction.
+	 *
+	 * @param {Object} object - The object from which to extract the body. This can be
+	 *                          a ReadableStream or other BodyInit types.
+	 * @param {boolean} [keepalive=false] - A flag indicating whether to keep the stream
+	 *                                       alive after extraction. Defaults to false.
+	 * @returns {Object} The result of extracting the body from the provided object.
+	 *
+	 * @throws {Error} Throws an error if the body has already been consumed or if the
+	 *                 stream is locked.
+	 *
+	 * @example
+	 * const body = safelyExtractBody(myReadableStream);
+	 * const bodyWithKeepAlive = safelyExtractBody(myReadableStream, true);
+	 */
 	function safelyExtractBody (object, keepalive = false) {
 	  if (!ReadableStream) {
 	    // istanbul ignore next
@@ -15529,6 +15639,12 @@ function requireHeaders () {
 var response;
 var hasRequiredResponse;
 
+/**
+ * Creates and returns a Response object based on the provided parameters.
+ * This function initializes the necessary components for handling HTTP responses.
+ *
+ * @returns {Object} The response object containing methods and properties for handling HTTP responses.
+ */
 function requireResponse () {
 	if (hasRequiredResponse) return response;
 	hasRequiredResponse = 1;
@@ -17062,6 +17178,14 @@ function requireRequest () {
 var fetch_1;
 var hasRequiredFetch;
 
+/**
+ * Initializes and returns a fetch implementation.
+ * This function sets up various utilities and classes necessary for making network requests.
+ * It ensures that the required modules are loaded and prepares the environment for fetch operations.
+ *
+ * @returns {Object} An object containing the fetch function and related classes.
+ * @throws {Error} Throws an error if required modules cannot be loaded.
+ */
 function requireFetch () {
 	if (hasRequiredFetch) return fetch_1;
 	hasRequiredFetch = 1;
@@ -18587,6 +18711,39 @@ function requireFetch () {
 	}
 
 	// https://fetch.spec.whatwg.org/#http-network-fetch
+	/**
+	 * Performs an HTTP network fetch operation based on the provided parameters.
+	 *
+	 * This function handles the setup of the connection, manages request body streaming,
+	 * and processes the response, including error handling and timing information.
+	 *
+	 * @async
+	 * @param {Object} fetchParams - The parameters for the fetch operation.
+	 * @param {Object} fetchParams.request - The request object containing method, headers, and body.
+	 * @param {Object} fetchParams.controller - The controller managing the fetch operation.
+	 * @param {Object} fetchParams.timingInfo - Timing information for the request.
+	 * @param {boolean} [includeCredentials=false] - Whether to include credentials in the request.
+	 * @param {boolean} [forceNewConnection=false] - Whether to force a new connection for the request.
+	 *
+	 * @returns {Promise<Object|null>} The response object or null if the fetch fails.
+	 *
+	 * @throws {DOMException} Throws an AbortError if the operation is aborted.
+	 * @throws {Error} Throws a network error if the fetch fails due to network issues.
+	 *
+	 * @example
+	 * const response = await httpNetworkFetch({
+	 *   request: {
+	 *     method: 'GET',
+	 *     headers: new Headers({'Content-Type': 'application/json'}),
+	 *     body: null
+	 *   },
+	 *   controller: {
+	 *     connection: null,
+	 *     abort: () => console.log('Aborted'),
+	 *   },
+	 *   timingInfo: {}
+	 * });
+	 */
 	async function httpNetworkFetch (
 	  fetchParams,
 	  includeCredentials = false,
