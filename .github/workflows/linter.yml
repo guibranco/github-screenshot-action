@@ -51,7 +51,3 @@ jobs:
           VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_JSON: false
           VALIDATE_TYPESCRIPT_STANDARD: false
-          VALIDATE_MARKDOWN_PRETTIER: false
-
-      - name: Run Prettier with local config
-        run: npx prettier --check "**/*.md"

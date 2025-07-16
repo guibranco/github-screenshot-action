@@ -25,6 +25,7 @@ follow the below instructions:
 1. Click **Create repository**
 1. Clone your new repository
 
+<!-- prettier-ignore -->
 > [!IMPORTANT]
 >
 > Make sure to remove or update the [`CODEOWNERS`](./CODEOWNERS) file! For
@@ -36,6 +37,7 @@ follow the below instructions:
 After you've cloned the repository to your local machine or codespace, you'll
 need to perform some initial setup steps before you can develop your action.
 
+<!-- prettier-ignore -->
 > [!NOTE]
 >
 > You'll need to have a reasonably modern version of
@@ -93,14 +95,14 @@ There are a few things to keep in mind when writing your action code:
   In `main.ts`, you will see that the action is run in an `async` function.
 
   ```javascript
-  import * as core from '@actions/core'
+  import * as core from "@actions/core";
   //...
 
   async function run() {
     try {
       //...
     } catch (error) {
-      core.setFailed(error.message)
+      core.setFailed(error.message);
     }
   }
   ```
