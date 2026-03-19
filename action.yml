@@ -1,5 +1,5 @@
 name: "GitHub Screenshot Action"
-description: "Capture, monitor, and version website screenshots from a JSON list with parallel execution, retries, and cron-based change detection"
+description: "Capture, monitor, and version website screenshots from a JSON list"
 
 inputs:
   json_file:
