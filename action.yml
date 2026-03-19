@@ -1,0 +1,44 @@
+name: "GitHub Screenshot Action"
+description: "Capture, monitor, and version website screenshots from a JSON list with parallel execution, retries, and cron-based change detection"
+
+inputs:
+  json_file:
+    description: "Path to JSON file with URLs"
+    required: true
+
+  output_dir:
+    description: "Directory to save screenshots"
+    required: true
+
+  create_pr:
+    description: "Create PR instead of direct commit"
+    required: false
+    default: "false"
+
+  branch_name:
+    description: "Branch name if PR is enabled"
+    required: false
+    default: "screenshots/update"
+
+  concurrency:
+    description: "Number of parallel screenshots"
+    required: false
+    default: "3"
+
+  timeout_ms:
+    description: "Page load timeout in milliseconds"
+    required: false
+    default: "30000"
+
+  retries:
+    description: "Number of retries per URL"
+    required: false
+    default: "2"
+
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
+branding:
+  icon: "camera"
+  color: "green"
