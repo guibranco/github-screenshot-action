@@ -14,6 +14,9 @@ async function run() {
       concurrency: parseInt(core.getInput("concurrency")),
       timeoutMs: parseInt(core.getInput("timeout_ms")),
       retries: parseInt(core.getInput("retries")),
+      waitUntil: core.getInput("wait_until") as "load" | "domcontentloaded" | "networkidle0" | "networkidle2",
+      square: core.getInput("square") === "true",
+      viewportWidth: parseInt(core.getInput("viewport_width")),
     };
 
     const items = loadItems(jsonFile);
