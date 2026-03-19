@@ -37,7 +37,7 @@ inputs:
 
 runs:
   using: "docker"
-  image: "Dockerfile"
+  image: docker://ghcr.io/guibranco/github-screenshot-action:v1.1.1
 
 branding:
   icon: "camera"
