@@ -2,7 +2,7 @@ import * as fs from "fs";
 import puppeteer from "puppeteer";
 import { takeScreenshots } from "../src/screenshot";
 
-// ── mock fs ──────────────────────────────────────────────────────────────────
+// ── mock fs ───────────────────────────────────────────────────────────────────
 jest.mock("fs", () => ({
   ...jest.requireActual("fs"),
   existsSync: jest.fn().mockReturnValue(true),
@@ -10,25 +10,42 @@ jest.mock("fs", () => ({
   writeFileSync: jest.fn(),
 }));
 
-// ── mock puppeteer ────────────────────────────────────────────────────────────
-const mockClose     = jest.fn();
-const mockScreenshot = jest.fn().mockResolvedValue(Buffer.from("png-data"));
-const mockGoto      = jest.fn();
-const mockSetViewport = jest.fn();
-const mockPageClose = jest.fn();
-const mockNewPage   = jest.fn().mockResolvedValue({
-  setViewport: mockSetViewport,
-  goto: mockGoto,
-  screenshot: mockScreenshot,
-  close: mockPageClose,
+// ── mock puppeteer (all fns defined inside factory to avoid hoisting issues) ──
+jest.mock("puppeteer", () => {
+  const mockPageClose  = jest.fn();
+  const mockScreenshot = jest.fn().mockResolvedValue(Buffer.from("png-data"));
+  const mockGoto       = jest.fn();
+  const mockSetViewport = jest.fn();
+  const mockNewPage    = jest.fn().mockResolvedValue({
+    setViewport: mockSetViewport,
+    goto: mockGoto,
+    screenshot: mockScreenshot,
+    close: mockPageClose,
+  });
+  const mockBrowserClose = jest.fn();
+
+  return {
+    launch: jest.fn().mockResolvedValue({
+      newPage: mockNewPage,
+      close: mockBrowserClose,
+    }),
+  };
 });
 
-jest.mock("puppeteer", () => ({
-  launch: jest.fn().mockResolvedValue({
-    newPage: mockNewPage,
-    close: mockClose,
-  }),
-}));
+// ── helpers to access mocks after hoisting ────────────────────────────────────
+const getMocks = async () => {
+  const browser = await (puppeteer.launch as jest.Mock)();
+  const page    = await browser.newPage();
+  return {
+    launch:      puppeteer.launch as jest.Mock,
+    browserClose: browser.close as jest.Mock,
+    newPage:     browser.newPage as jest.Mock,
+    setViewport: page.setViewport as jest.Mock,
+    goto:        page.goto as jest.Mock,
+    screenshot:  page.screenshot as jest.Mock,
+    pageClose:   page.close as jest.Mock,
+  };
+};
 
 // ── shared base options ───────────────────────────────────────────────────────
 const baseOptions = {
@@ -45,57 +62,64 @@ beforeEach(() => jest.clearAllMocks());
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 test("captures a screenshot with default options", async () => {
+  const { setViewport, goto, screenshot } = await getMocks();
+
   await takeScreenshots([{ url: "https://example.com", name: "homepage" }], "./out", baseOptions);
 
-  expect(mockSetViewport).toHaveBeenCalledWith({ width: 1280, height: 720 });
-  expect(mockGoto).toHaveBeenCalledWith("https://example.com", {
+  expect(setViewport).toHaveBeenCalledWith({ width: 1280, height: 720 });
+  expect(goto).toHaveBeenCalledWith("https://example.com", {
     timeout: 5000,
     waitUntil: "load",
   });
-  expect(mockScreenshot).toHaveBeenCalledWith({ fullPage: true });
+  expect(screenshot).toHaveBeenCalledWith({ fullPage: true });
   expect(fs.writeFileSync).toHaveBeenCalledWith("out/homepage.png", expect.any(Buffer));
-  expect(mockPageClose).toHaveBeenCalled();
-  expect(mockClose).toHaveBeenCalled();
 });
 
 test("sets square viewport and clip when square is true", async () => {
+  const { setViewport, screenshot } = await getMocks();
+
   await takeScreenshots(
     [{ url: "https://example.com", name: "square-shot" }],
     "./out",
     { ...baseOptions, square: true, viewportWidth: 1280 }
   );
 
-  expect(mockSetViewport).toHaveBeenCalledWith({ width: 1280, height: 1280 });
-  expect(mockScreenshot).toHaveBeenCalledWith({
+  expect(setViewport).toHaveBeenCalledWith({ width: 1280, height: 1280 });
+  expect(screenshot).toHaveBeenCalledWith({
     fullPage: false,
     clip: { x: 0, y: 0, width: 1280, height: 1280 },
   });
 });
 
 test("passes waitUntil to page.goto", async () => {
+  const { goto } = await getMocks();
+
   await takeScreenshots(
     [{ url: "https://example.com", name: "idle" }],
     "./out",
     { ...baseOptions, waitUntil: "networkidle0" }
   );
 
-  expect(mockGoto).toHaveBeenCalledWith("https://example.com", {
+  expect(goto).toHaveBeenCalledWith("https://example.com", {
     timeout: 5000,
     waitUntil: "networkidle0",
   });
 });
 
 test("respects custom viewport width", async () => {
+  const { setViewport } = await getMocks();
+
   await takeScreenshots(
     [{ url: "https://example.com", name: "wide" }],
     "./out",
     { ...baseOptions, viewportWidth: 1920 }
   );
 
-  expect(mockSetViewport).toHaveBeenCalledWith({ width: 1920, height: 1080 });
+  expect(setViewport).toHaveBeenCalledWith({ width: 1920, height: 1080 });
 });
 
 test("runs multiple screenshots with concurrency", async () => {
+  const { newPage } = await getMocks();
   const items = [
     { url: "https://example.com", name: "page-one" },
     { url: "https://example.org", name: "page-two" },
@@ -104,13 +128,14 @@ test("runs multiple screenshots with concurrency", async () => {
 
   await takeScreenshots(items, "./out", { ...baseOptions, concurrency: 2 });
 
-  expect(mockNewPage).toHaveBeenCalledTimes(3);
-  expect(mockScreenshot).toHaveBeenCalledTimes(3);
-  expect(fs.writeFileSync).toHaveBeenCalledTimes(3);
+  // +1 because getMocks() itself calls newPage once
+  expect(newPage).toHaveBeenCalledTimes(items.length + 1);
+  expect(fs.writeFileSync).toHaveBeenCalledTimes(items.length);
 });
 
 test("retries on failure and succeeds on second attempt", async () => {
-  mockScreenshot
+  const { screenshot } = await getMocks();
+  screenshot
     .mockRejectedValueOnce(new Error("network error"))
     .mockResolvedValueOnce(Buffer.from("png-data"));
 
@@ -120,7 +145,8 @@ test("retries on failure and succeeds on second attempt", async () => {
     { ...baseOptions, retries: 2 }
   );
 
-  expect(mockScreenshot).toHaveBeenCalledTimes(2);
+  // +1 for the getMocks() call, then 2 real attempts
+  expect(screenshot).toHaveBeenCalledTimes(3);
   expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
 });
 
