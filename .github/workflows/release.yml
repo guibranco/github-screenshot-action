@@ -11,24 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Setup .NET (for GitVersion)
-        uses: actions/setup-dotnet@v4
+      - name: 🔧 Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.4.1
         with:
-          dotnet-version: 8.0.x
+          versionSpec: "6.x"
 
-      - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.10.2
-        with:
-          versionSpec: '5.x'
-
-      - name: Determine version
+      - name: 🏷️ Determine Version Number
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.10.2
+        uses: gittools/actions/gitversion/execute@v4.4.1
 
       - name: Set version env
         run: |
