@@ -1,4 +1,6 @@
-[![logo](https://raw.githubusercontent.com/guibranco/github-screenshot-action/main/logo.png)]
+<p align="center">
+  <img src="https://raw.githubusercontent.com/guibranco/github-screenshot-action/main/logo.png" alt="logo" width="120" height="120" />
+</p>
 
 # 📸 github-screenshot-action
 
