@@ -8,21 +8,15 @@ RETRIES="${INPUT_RETRIES:-2}"
 CONCURRENCY="${INPUT_CONCURRENCY:-3}"
 TIMEOUT_MS="${INPUT_TIMEOUT_MS:-30000}"
 
-# ✅ Build TypeScript dynamically
-echo "Building TypeScript..."
-npm run build
-
-# 📦 Ensure output directory exists
 mkdir -p "$OUTPUT_DIR"
 
-# 🔁 Function to run the Node script with retries
 run_screenshot() {
   local attempt=0
   local success=0
   while [ $attempt -le "$RETRIES" ]; do
     attempt=$((attempt + 1))
     echo "Running screenshot script (attempt $attempt)..."
-    if node dist/main.js \
+    if node /app/dist/main.js \
         --json "$JSON_FILE" \
         --output "$OUTPUT_DIR" \
         --concurrency "$CONCURRENCY" \
@@ -41,5 +35,4 @@ run_screenshot() {
   fi
 }
 
-# 🏃 Run
 run_screenshot
