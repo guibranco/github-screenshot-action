@@ -27,6 +27,8 @@ A reusable GitHub Action that takes screenshots of websites from a JSON list, wi
 | 🔀 **Automated PRs** | Optionally open a pull request automatically after each monitoring run |
 | 🐳 **Pre-built Docker image** | No cold build — uses a pre-published image from GHCR for fast startup |
 | 🔐 **Chromium-based** | Full Puppeteer + Chromium stack for accurate, real-browser rendering |
+| ⏳ **Wait strategies** | Wait for full page load, network idle, or DOM ready before capturing |
+| 🟥 **Square mode** | Optionally clip output to a square for thumbnails or social previews |
 
 ---
 
@@ -64,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run screenshot monitoring
-        uses: guibranco/github-screenshot-action@v2.0.9
+        uses: guibranco/github-screenshot-action@v2.0.17
         with:
           json_file: "sites.json"
           output_dir: "screenshots/"
@@ -73,6 +75,9 @@ jobs:
           timeout_ms: "20000"
           create_pr: "true"
           branch_name: "monitor/screenshots"
+          wait_until: "networkidle0"
+          square: "false"
+          viewport_width: "1280"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -90,6 +95,9 @@ jobs:
 | `timeout_ms` | ❌ | `30000` | Page load timeout per site in milliseconds |
 | `create_pr` | ❌ | `false` | If `true`, opens a PR after committing screenshots |
 | `branch_name` | ❌ | `monitor/screenshots` | Branch to commit screenshots to |
+| `wait_until` | ❌ | `load` | Page load event to wait for before capturing. See [Wait Strategies](#wait-strategies) |
+| `square` | ❌ | `false` | If `true`, clips the output to a square using `viewport_width` as the side length |
+| `viewport_width` | ❌ | `1280` | Viewport width in pixels. Also controls the square size when `square` is `true` |
 
 ---
 
@@ -134,6 +142,36 @@ env:
 
 ---
 
+## ⏳ Wait Strategies
+
+The `wait_until` input controls when Puppeteer considers the page ready to capture. Choose based on how dynamic the target site is:
+
+| Value | Waits until... | Best for |
+|---|---|---|
+| `domcontentloaded` | HTML is parsed, no assets waited on | Simple static pages |
+| `load` | All resources loaded (default) | Most standard websites |
+| `networkidle2` | No more than 2 requests in flight for 500ms | Pages with background polling |
+| `networkidle0` | Zero network requests for 500ms | SPAs and lazy-loaded content |
+
+> **Tip:** `networkidle0` produces the most complete captures but is the slowest. If a site has continuous background requests (analytics, websockets), use `networkidle2` to avoid hitting the timeout.
+
+---
+
+## 🟥 Square Mode
+
+When `square: "true"`, the action sets a square viewport and clips the output to `viewport_width × viewport_width` pixels. Full-page scrolling is disabled in this mode.
+
+```yaml
+square: "true"
+viewport_width: "1280"  # produces a 1280×1280 PNG
+```
+
+This is useful for generating consistent thumbnails, social preview images, or monitoring dashboards where uniform dimensions are required.
+
+> **Note:** `square` and full-page capture are mutually exclusive. When `square` is enabled, only the top portion of the page visible within the square viewport is captured.
+
+---
+
 ## 🗓️ Scheduling Examples
 
 ```yaml
@@ -163,7 +201,9 @@ parser.ts ──► loadItems()
                     ▼
             screenshot.ts ──► Puppeteer + pLimit (parallel)
                     │              │
-                    │         Chromium (headless)
+                    │         setViewport(width, height)
+                    │         goto(url, { waitUntil })
+                    │         screenshot({ fullPage | clip })
                     │
                     ▼
               output_dir/*.png
