@@ -27,7 +27,7 @@ async function process(item: any, browser: any, outputDir: string, options: any)
 
       await page.goto(item.url, { timeout: options.timeoutMs });
 
-      const name = item.name || hash(item.url);
+      const name = (item.name || hash(item.url)).toLowerCase();
       const file = path.join(outputDir, `${name}.png`);
 
       const buffer = await page.screenshot({ fullPage: true });
