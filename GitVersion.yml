@@ -1,0 +1,12 @@
+mode: ContinuousDeployment
+branches:
+  main:
+    increment: Minor
+    prevent-increment:
+      when-current-commit-tagged: true
+  feature:
+    increment: Minor
+  hotfix:
+    increment: Patch
+ignore:
+  sha: []

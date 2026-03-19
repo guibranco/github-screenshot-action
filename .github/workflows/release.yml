@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET (for GitVersion)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.10.2
+        with:
+          versionSpec: '5.x'
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.10.2
+
+      - name: Set version env
+        run: |
+          echo "VERSION=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_ENV
+
+      - name: Build project
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag v${VERSION}
+          git push origin v${VERSION}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          body: |
+            Automated release for version ${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
