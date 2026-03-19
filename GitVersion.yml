@@ -1,12 +1,6 @@
+workflow: GitHubFlow/v1
 mode: ContinuousDeployment
-branches:
-  main:
-    increment: Minor
-    prevent-increment:
-      when-current-commit-tagged: true
-  feature:
-    increment: Minor
-  hotfix:
-    increment: Patch
-ignore:
-  sha: []
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{MajorMinorPatch}{PreReleaseTagWithDash}+{ShortSha}'
+tag-prefix: '[vV]'
