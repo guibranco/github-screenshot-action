@@ -1,6 +1,4 @@
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/guibranco/github-screenshot-action/main/logo.png" alt="logo" width="120" height="120" />
+[![logo](https://raw.githubusercontent.com/guibranco/github-screenshot-action/main/logo.png)]
 
 # 📸 github-screenshot-action
 
@@ -14,8 +12,6 @@ A reusable GitHub Action that takes screenshots of websites from a JSON list, wi
 [![Maintained](https://img.shields.io/badge/maintained-yes-f59e0b?style=flat-square)](https://github.com/guibranco/github-screenshot-action)
 
 ---
-
-</div>
 
 ## ✨ Features
 
@@ -66,7 +62,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run screenshot monitoring
-        uses: guibranco/github-screenshot-action@v2.0.4
+        uses: guibranco/github-screenshot-action@v2.0.9
         with:
           json_file: "sites.json"
           output_dir: "screenshots/"
@@ -172,9 +168,9 @@ parser.ts ──► loadItems()
                     │
                     ▼
               git.ts ──► checkout branch
-                    │    git add / commit
+                    │    git add -f / commit
                     │    git push --force
-                    │    gh pr create (optional)
+                    │    GitHub API PR (optional)
                     ▼
              Pull Request / Branch
 ```
@@ -191,10 +187,9 @@ ghcr.io/guibranco/github-screenshot-action:<version>
 
 The image includes:
 
-- `node:20-slim` base
-- Chromium + all required system dependencies
-- GitHub CLI (`gh`) for PR automation
-- Pre-compiled TypeScript (`dist/`)
+- `node:24-slim` base
+- Chromium and all required system dependencies
+- Pre-compiled TypeScript output in `dist/`
 
 New images are published automatically on every release via the `release.yml` workflow.
 
@@ -206,11 +201,11 @@ Your workflow needs the following permissions for full functionality:
 
 ```yaml
 permissions:
-  contents: write   # to push the screenshot branch
+  contents: write       # to push the screenshot branch
   pull-requests: write  # to open PRs
 ```
 
-Or, if using a classic `GITHUB_TOKEN` without an explicit `permissions` block, make sure your repository's **Action settings** allow workflows to create PRs.
+If you are using a classic `GITHUB_TOKEN` without an explicit `permissions` block, make sure your repository's **Actions settings** allow workflows to create pull requests.
 
 ---
 
@@ -218,7 +213,7 @@ Or, if using a classic `GITHUB_TOKEN` without an explicit `permissions` block, m
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - npm
 
 ### Setup
@@ -255,10 +250,9 @@ Output is written to `dist/`.
 ### Publishing a new version
 
 1. Merge your changes to `main`
-2. Create a GitHub Release (e.g. `v2.0.4.2.0`)
-3. The `release.yml` workflow will automatically:
-   - Build and push the Docker image to GHCR tagged as `v2.0.4.2.0` and `latest`
-   - Update the `image:` tag in `action.yml` and commit it back to `main`
+2. The `release.yml` workflow automatically determines the next version via GitVersion
+3. It builds and pushes the Docker image to GHCR tagged as `vX.Y.Z` and `latest`
+4. It opens a PR updating the `image:` tag in `action.yml` — merge it to complete the release
 
 ---
 
@@ -268,8 +262,4 @@ MIT © [Guilherme Branco Stracini](https://github.com/guibranco)
 
 ---
 
-<div align="center">
-
 Made with ❤️ and ☕ — contributions welcome via [issues](https://github.com/guibranco/github-screenshot-action/issues) and [pull requests](https://github.com/guibranco/github-screenshot-action/pulls).
-
-</div>
