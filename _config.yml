@@ -1,0 +1,4 @@
+theme: jekyll-theme-cayman
+title: '📸 A reusable GitHub Action to capture, monitor, and version website screenshots from a JSON list.'
+description: 'A GitHub Action to automatically capture screenshots of websites defined in a JSON file, with parallel execution, retry logic, cron-based scheduling, and automated pull request creation. Powered by Puppeteer and a pre-built Docker image published to GHCR.'
+show_downloads: true
