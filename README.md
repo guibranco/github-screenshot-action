@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/guibranco/github-screenshot-action/main/docs/logo.png" alt="logo" width="120" height="120" />
+<img src="https://raw.githubusercontent.com/guibranco/github-screenshot-action/main/logo.png" alt="logo" width="120" height="120" />
 
 # 📸 github-screenshot-action
 
