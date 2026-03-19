@@ -7,6 +7,8 @@ async function run() {
   try {
     const jsonFile = core.getInput("json_file");
     const outputDir = core.getInput("output_dir");
+    const createPr = core.getInput("create_pr") === "true";
+    const branchName = core.getInput("branch_name");
 
     const options = {
       concurrency: parseInt(core.getInput("concurrency")),
@@ -14,17 +16,13 @@ async function run() {
       retries: parseInt(core.getInput("retries")),
     };
 
-    const createPr = core.getInput("create_pr") === "true";
-    const branchName = core.getInput("branch_name");
-
     const items = loadItems(jsonFile);
-
     await takeScreenshots(items, outputDir, options);
 
     if (createPr) {
-      await createPullRequest(branchName);
+      await createPullRequest(branchName, outputDir);
     } else {
-      await commitChanges();
+      await commitChanges(outputDir);
     }
   } catch (error: any) {
     core.setFailed(error.message);

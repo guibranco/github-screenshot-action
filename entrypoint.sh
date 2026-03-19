@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 🛠 Environment defaults
 JSON_FILE="${INPUT_JSON_FILE:-screenshots.json}"
 OUTPUT_DIR="${INPUT_OUTPUT_DIR:-screenshots}"
 RETRIES="${INPUT_RETRIES:-2}"
@@ -18,11 +17,7 @@ run_screenshot() {
   while [ $attempt -le "$RETRIES" ]; do
     attempt=$((attempt + 1))
     echo "Running screenshot script (attempt $attempt)..."
-    if node /app/dist/main.js \
-        --json "$JSON_FILE" \
-        --output "$OUTPUT_DIR" \
-        --concurrency "$CONCURRENCY" \
-        --timeout "$TIMEOUT_MS"; then
+    if node /app/dist/main.js; then
       success=1
       break
     else
