@@ -66,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run screenshot monitoring
-        uses: guibranco/github-screenshot-action@v2.0.9
+        uses: guibranco/github-screenshot-action@v2.0.17
         with:
           json_file: "sites.json"
           output_dir: "screenshots/"
