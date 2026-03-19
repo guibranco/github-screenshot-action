@@ -8,6 +8,8 @@ RETRIES="${INPUT_RETRIES:-2}"
 CONCURRENCY="${INPUT_CONCURRENCY:-3}"
 TIMEOUT_MS="${INPUT_TIMEOUT_MS:-30000}"
 
+git config --global --add safe.directory /github/workspace
+
 mkdir -p "$OUTPUT_DIR"
 
 run_screenshot() {
