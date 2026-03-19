@@ -1,6 +1,5 @@
-FROM node:20-slim
+FROM node:24-slim
 
-# Install Chromium + deps
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-liberation \
@@ -14,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Puppeteer env
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
@@ -23,7 +21,6 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-
 RUN npm run build
 
 COPY entrypoint.sh /app/entrypoint.sh
