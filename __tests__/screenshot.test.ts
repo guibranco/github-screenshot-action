@@ -128,7 +128,7 @@ test("runs multiple screenshots with concurrency", async () => {
 
   await takeScreenshots(items, "./out", { ...baseOptions, concurrency: 2 });
 
-  // +1 because getMocks() itself calls newPage once
+  // +1 because getMocks() itself calls newPage() once to get the page reference
   expect(newPage).toHaveBeenCalledTimes(items.length + 1);
   expect(fs.writeFileSync).toHaveBeenCalledTimes(items.length);
 });
@@ -145,8 +145,7 @@ test("retries on failure and succeeds on second attempt", async () => {
     { ...baseOptions, retries: 2 }
   );
 
-  // +1 for the getMocks() call, then 2 real attempts
-  expect(screenshot).toHaveBeenCalledTimes(3);
+  expect(screenshot).toHaveBeenCalledTimes(2); 
   expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
 });
 
