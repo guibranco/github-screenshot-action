@@ -66,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run screenshot monitoring
-        uses: guibranco/github-screenshot-action@v1
+        uses: guibranco/github-screenshot-action@v2.0.4
         with:
           json_file: "sites.json"
           output_dir: "screenshots/"
@@ -255,9 +255,9 @@ Output is written to `dist/`.
 ### Publishing a new version
 
 1. Merge your changes to `main`
-2. Create a GitHub Release (e.g. `v1.2.0`)
+2. Create a GitHub Release (e.g. `v2.0.4.2.0`)
 3. The `release.yml` workflow will automatically:
-   - Build and push the Docker image to GHCR tagged as `v1.2.0` and `latest`
+   - Build and push the Docker image to GHCR tagged as `v2.0.4.2.0` and `latest`
    - Update the `image:` tag in `action.yml` and commit it back to `main`
 
 ---
