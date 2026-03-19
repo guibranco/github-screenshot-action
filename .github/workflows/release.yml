@@ -4,12 +4,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
+      pull-requests: write
+
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v6
@@ -35,8 +38,8 @@ jobs:
 
       - name: Create tag
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag v${VERSION}
           git push origin v${VERSION}
 
@@ -65,14 +68,22 @@ jobs:
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:v${{ env.VERSION }}
 
-      - name: Update image tag in action.yml
-        run: |
-          sed -i "s|image: docker://ghcr.io/${{ github.repository }}:.*|image: docker://ghcr.io/${{ github.repository }}:v${{ env.VERSION }}|" action.yml
-
-      - name: Commit updated action.yml
+      - name: Update image tag in action.yml on a branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b release/action-v${{ env.VERSION }}
+          sed -i "s|image: docker://ghcr.io/${{ github.repository }}:.*|image: docker://ghcr.io/${{ github.repository }}:v${{ env.VERSION }}|" action.yml
           git add action.yml
-          git diff --staged --quiet || git commit -m "chore: update image tag to v${{ env.VERSION }} [skip ci]"
-          git push
+          git commit -m "chore: update image tag to v${{ env.VERSION }} [skip ci]"
+          git push origin release/action-v${{ env.VERSION }}
+
+      - name: Open PR for action.yml update
+        run: |
+          gh pr create \
+            --title "chore: update image tag to v${{ env.VERSION }}" \
+            --body "Automated update of the Docker image tag in \`action.yml\` to \`v${{ env.VERSION }}\`." \
+            --base main \
+            --head release/action-v${{ env.VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
