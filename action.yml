@@ -35,6 +35,21 @@ inputs:
     required: false
     default: "2"
 
+  wait_until:
+    description: "Puppeteer page load event to wait for before capturing. Options: load, domcontentloaded, networkidle0, networkidle2"
+    required: false
+    default: "load"
+  
+  square:
+    description: "If true, captures a square screenshot by setting a square viewport and clipping to width x width"
+    required: false
+    default: "false"
+  
+  viewport_width:
+    description: "Viewport width in pixels. Also used as the square size when square is true."
+    required: false
+    default: "1280"
+
 runs:
   using: "docker"
   image: docker://ghcr.io/guibranco/github-screenshot-action:v2.0.16
