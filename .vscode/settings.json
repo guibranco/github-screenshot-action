@@ -3,5 +3,6 @@
         "connectionId": "guibranco",
         "projectKey": "guibranco_github-screenshot-action"
     },
-    "snyk.advanced.autoSelectOrganization": true
+    "snyk.advanced.autoSelectOrganization": true,
+    "sarif-viewer.connectToGithubCodeScanning": "on"
 }
