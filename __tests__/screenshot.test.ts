@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 import puppeteer from "puppeteer";
 import { takeScreenshots } from "../src/screenshot";
 
@@ -16,11 +17,13 @@ jest.mock("puppeteer", () => {
   const mockScreenshot = jest.fn().mockResolvedValue(Buffer.from("png-data"));
   const mockGoto       = jest.fn();
   const mockSetViewport = jest.fn();
+  const mockWaitForNetworkIdle = jest.fn();
   const mockNewPage    = jest.fn().mockResolvedValue({
     setViewport: mockSetViewport,
     goto: mockGoto,
     screenshot: mockScreenshot,
     close: mockPageClose,
+    waitForNetworkIdle: mockWaitForNetworkIdle,
   });
   const mockBrowserClose = jest.fn();
 
@@ -37,13 +40,14 @@ const getMocks = async () => {
   const browser = await (puppeteer.launch as jest.Mock)();
   const page    = await browser.newPage();
   return {
-    launch:      puppeteer.launch as jest.Mock,
-    browserClose: browser.close as jest.Mock,
-    newPage:     browser.newPage as jest.Mock,
-    setViewport: page.setViewport as jest.Mock,
-    goto:        page.goto as jest.Mock,
-    screenshot:  page.screenshot as jest.Mock,
-    pageClose:   page.close as jest.Mock,
+    launch:               puppeteer.launch as jest.Mock,
+    browserClose:         browser.close as jest.Mock,
+    newPage:              browser.newPage as jest.Mock,
+    setViewport:          page.setViewport as jest.Mock,
+    goto:                 page.goto as jest.Mock,
+    screenshot:           page.screenshot as jest.Mock,
+    pageClose:            page.close as jest.Mock,
+    waitForNetworkIdle:   page.waitForNetworkIdle as jest.Mock,
   };
 };
 
@@ -55,6 +59,7 @@ const baseOptions = {
   waitUntil: "load" as const,
   square: false,
   viewportWidth: 1280,
+  waitAfterLoad: 0,
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -62,7 +67,7 @@ beforeEach(() => jest.clearAllMocks());
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 test("captures a screenshot with default options", async () => {
-  const { setViewport, goto, screenshot } = await getMocks();
+  const { setViewport, goto, screenshot, waitForNetworkIdle } = await getMocks();
 
   await takeScreenshots([{ url: "https://example.com", name: "homepage" }], "./out", baseOptions);
 
@@ -71,8 +76,9 @@ test("captures a screenshot with default options", async () => {
     timeout: 5000,
     waitUntil: "load",
   });
+  expect(waitForNetworkIdle).toHaveBeenCalledWith({ timeout: 5000 });
   expect(screenshot).toHaveBeenCalledWith({ fullPage: true });
-  expect(fs.writeFileSync).toHaveBeenCalledWith("out/homepage.png", expect.any(Buffer));
+  expect(fs.writeFileSync).toHaveBeenCalledWith(path.join("out", "homepage.png"), expect.any(Buffer));
 });
 
 test("sets square viewport and clip when square is true", async () => {
@@ -153,7 +159,7 @@ test("uses hashed filename when name is missing", async () => {
   await takeScreenshots([{ url: "https://example.com" }], "./out", baseOptions);
 
   const [[filePath]] = (fs.writeFileSync as jest.Mock).mock.calls;
-  expect(filePath).toMatch(/^out\/[a-f0-9]{64}\.png$/);
+  expect(filePath).toMatch(/[a-f0-9]{64}\.png$/);
 });
 
 test("creates output directory if it does not exist", async () => {
@@ -166,4 +172,58 @@ test("creates output directory if it does not exist", async () => {
   );
 
   expect(fs.mkdirSync).toHaveBeenCalledWith("./out", { recursive: true });
+});
+
+test("calls waitForNetworkIdle when waitUntil is domcontentloaded", async () => {
+  const { waitForNetworkIdle } = await getMocks();
+
+  await takeScreenshots(
+    [{ url: "https://example.com", name: "dce" }],
+    "./out",
+    { ...baseOptions, waitUntil: "domcontentloaded" }
+  );
+
+  expect(waitForNetworkIdle).toHaveBeenCalledWith({ timeout: 5000 });
+});
+
+test("does not call waitForNetworkIdle when waitUntil is networkidle2", async () => {
+  const { waitForNetworkIdle } = await getMocks();
+
+  await takeScreenshots(
+    [{ url: "https://example.com", name: "idle" }],
+    "./out",
+    { ...baseOptions, waitUntil: "networkidle2" }
+  );
+
+  expect(waitForNetworkIdle).not.toHaveBeenCalled();
+});
+
+test("does not call waitForNetworkIdle when waitUntil is networkidle0", async () => {
+  const { waitForNetworkIdle } = await getMocks();
+
+  await takeScreenshots(
+    [{ url: "https://example.com", name: "idle0" }],
+    "./out",
+    { ...baseOptions, waitUntil: "networkidle0" }
+  );
+
+  expect(waitForNetworkIdle).not.toHaveBeenCalled();
+});
+
+test("waits extra delay when waitAfterLoad is set", async () => {
+  jest.useFakeTimers();
+  const { screenshot } = await getMocks();
+
+  const promise = takeScreenshots(
+    [{ url: "https://example.com", name: "delayed" }],
+    "./out",
+    // networkidle2 skips waitForNetworkIdle so only the setTimeout is pending
+    { ...baseOptions, waitUntil: "networkidle2", waitAfterLoad: 2000 }
+  );
+
+  await jest.runAllTimersAsync();
+  await promise;
+
+  expect(screenshot).toHaveBeenCalled();
+  jest.useRealTimers();
 });
