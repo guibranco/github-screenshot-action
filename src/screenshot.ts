@@ -12,6 +12,7 @@ interface ScreenshotOptions {
   waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
   square: boolean;
   viewportWidth: number;
+  waitAfterLoad: number;
 }
 
 export async function takeScreenshots(items: any[], outputDir: string, options: ScreenshotOptions) {
@@ -46,6 +47,15 @@ async function capture(item: any, browser: any, outputDir: string, options: Scre
         timeout: options.timeoutMs,
         waitUntil: options.waitUntil,
       });
+
+      // React/Vite SPAs render after the load event — wait for network to settle
+      if (options.waitUntil === "load" || options.waitUntil === "domcontentloaded") {
+        await page.waitForNetworkIdle({ timeout: options.timeoutMs });
+      }
+
+      if (options.waitAfterLoad > 0) {
+        await new Promise<void>(resolve => setTimeout(resolve, options.waitAfterLoad));
+      }
 
       const name = (item.name || hash(item.url)).toLowerCase();
       const file = path.join(outputDir, `${name}.png`);

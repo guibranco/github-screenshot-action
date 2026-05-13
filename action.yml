@@ -38,7 +38,12 @@ inputs:
   wait_until:
     description: "Puppeteer page load event to wait for before capturing. Options: load, domcontentloaded, networkidle0, networkidle2"
     required: false
-    default: "load"
+    default: "networkidle2"
+
+  wait_after_load:
+    description: "Extra milliseconds to wait after the page load event. Useful for React/Vite apps that animate or fetch data lazily after hydration."
+    required: false
+    default: "0"
   
   square:
     description: "If true, captures a square screenshot by setting a square viewport and clipping to width x width"

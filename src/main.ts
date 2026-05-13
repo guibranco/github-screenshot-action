@@ -17,6 +17,7 @@ async function run() {
       waitUntil: core.getInput("wait_until") as "load" | "domcontentloaded" | "networkidle0" | "networkidle2",
       square: core.getInput("square") === "true",
       viewportWidth: parseInt(core.getInput("viewport_width")),
+      waitAfterLoad: parseInt(core.getInput("wait_after_load") || "0"),
     };
 
     const items = loadItems(jsonFile);
