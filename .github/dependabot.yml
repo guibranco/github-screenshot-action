@@ -20,6 +20,7 @@ updates:
         patterns:
           - "typescript"
           - "ts-node"
+          - "ts-jest"
           - "@types/*"
     labels:
       - "dependencies"
