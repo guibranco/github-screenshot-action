@@ -1,7 +1,7 @@
 ARG NODE_VERSION=24
 FROM node:${NODE_VERSION}-slim
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
     libnss3 \
