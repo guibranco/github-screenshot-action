@@ -7,6 +7,7 @@ on:
 
 jobs:
   release:
+    if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore: update image tag')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,29 +29,10 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v4.5.0
 
-      - name: Set version env
-        run: echo "VERSION=${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_ENV
-
       - name: Build project
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npm run build
-
-      - name: Create tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v${VERSION}
-          git push origin v${VERSION}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v${{ env.VERSION }}
-          name: v${{ env.VERSION }}
-          body: Automated release for version ${{ env.VERSION }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
@@ -66,24 +48,38 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:v${{ env.VERSION }}
+            ghcr.io/${{ github.repository }}:v${{ steps.gitversion.outputs.semVer }}
 
       - name: Update image tag in action.yml on a branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b release/action-v${{ env.VERSION }}
-          sed -i "s|image: docker://ghcr.io/${{ github.repository }}:.*|image: docker://ghcr.io/${{ github.repository }}:v${{ env.VERSION }}|" action.yml
+          git checkout -b release/action-v${{ steps.gitversion.outputs.semVer }}
+          sed -i "s|image: docker://ghcr.io/${{ github.repository }}:.*|image: docker://ghcr.io/${{ github.repository }}:v${{ steps.gitversion.outputs.semVer }}|" action.yml
           git add action.yml
-          git commit -m "chore: update image tag to v${{ env.VERSION }} [skip ci]"
-          git push origin release/action-v${{ env.VERSION }}
+          git commit -m "chore: update image tag to v${{ steps.gitversion.outputs.semVer }} [skip ci]"
+          git push origin release/action-v${{ steps.gitversion.outputs.semVer }}
+
+      - name: Create tag on updated action.yml commit
+        run: |
+          git tag v${{ steps.gitversion.outputs.semVer }}
+          git push origin v${{ steps.gitversion.outputs.semVer }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.gitversion.outputs.semVer }}
+          name: v${{ steps.gitversion.outputs.semVer }}
+          body: Automated release for version ${{ steps.gitversion.outputs.semVer }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Open PR for action.yml update
         run: |
           gh pr create \
-            --title "chore: update image tag to v${{ env.VERSION }}" \
-            --body "Automated update of the Docker image tag in \`action.yml\` to \`v${{ env.VERSION }}\`." \
+            --title "chore: update image tag to v${{ steps.gitversion.outputs.semVer }}" \
+            --body "Automated update of the Docker image tag in \`action.yml\` to \`v${{ steps.gitversion.outputs.semVer }}\`." \
             --base main \
-            --head release/action-v${{ env.VERSION }}
+            --head release/action-v${{ steps.gitversion.outputs.semVer }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
