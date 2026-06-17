@@ -18,5 +18,38 @@ jobs:
       - run: npm run build
       - run: npm test
 
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node_version: [22, 24, 26]
+      fail-fast: false
+
+    name: Docker (node:${{ matrix.node_version }}-slim)
+
+    steps:
+      - uses: actions/checkout@v6
+
       - name: Build Docker image
-        run: docker build -t screenshot-action .
+        run: docker build --build-arg NODE_VERSION=${{ matrix.node_version }} -t screenshot-action-${{ matrix.node_version }} .
+
+      - name: Verify Node.js major version
+        run: |
+          actual=$(docker run --rm --entrypoint node screenshot-action-${{ matrix.node_version }} --version)
+          echo "Node version: $actual"
+          echo "$actual" | grep -q "^v${{ matrix.node_version }}\." || { echo "Expected v${{ matrix.node_version }}.x, got $actual"; exit 1; }
+
+      - name: Verify Chromium is installed and executable
+        run: docker run --rm --entrypoint chromium screenshot-action-${{ matrix.node_version }} --version
+
+      - name: Verify compiled dist files exist
+        run: docker run --rm --entrypoint ls screenshot-action-${{ matrix.node_version }} /app/dist/main.js
+
+      - name: Verify entrypoint is executable
+        run: docker run --rm --entrypoint sh screenshot-action-${{ matrix.node_version }} -c "test -x /app/entrypoint.sh && echo 'entrypoint OK'"
+
+      - name: Verify PUPPETEER_EXECUTABLE_PATH env var
+        run: |
+          actual=$(docker run --rm --entrypoint sh screenshot-action-${{ matrix.node_version }} -c "echo \$PUPPETEER_EXECUTABLE_PATH")
+          echo "PUPPETEER_EXECUTABLE_PATH: $actual"
+          [ "$actual" = "/usr/bin/chromium" ] || { echo "Unexpected value: $actual"; exit 1; }
