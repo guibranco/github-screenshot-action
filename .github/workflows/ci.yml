@@ -53,3 +53,8 @@ jobs:
           actual=$(docker run --rm --entrypoint sh screenshot-action-${{ matrix.node_version }} -c "echo \$PUPPETEER_EXECUTABLE_PATH")
           echo "PUPPETEER_EXECUTABLE_PATH: $actual"
           [ "$actual" = "/usr/bin/chromium" ] || { echo "Unexpected value: $actual"; exit 1; }
+
+      - name: Verify @actions/core loads (catches ERR_PACKAGE_PATH_NOT_EXPORTED on Node 26+)
+        run: |
+          docker run --rm --entrypoint node screenshot-action-${{ matrix.node_version }} \
+            -e "require('@actions/core'); console.log('OK')"
