@@ -9,13 +9,6 @@ updates:
       time: "06:00"
       timezone: "Europe/Dublin"
     open-pull-requests-limit: 10
-    ignore:
-      # @actions/core 3.x is ESM-only (no "require" export). This action is
-      # compiled to CommonJS, so require("@actions/core") throws
-      # ERR_PACKAGE_PATH_NOT_EXPORTED at startup and the published image is
-      # dead on arrival. Stay on 2.x until the build is moved to ESM.
-      - dependency-name: "@actions/core"
-        update-types: ["version-update:semver-major"]
     groups:
       puppeteer:
         patterns:

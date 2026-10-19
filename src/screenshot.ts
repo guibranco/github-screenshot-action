@@ -3,7 +3,7 @@ import pLimit from "p-limit";
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
-import { log } from "./logger";
+import { log } from "./logger.js";
 
 interface ScreenshotOptions {
   concurrency: number;

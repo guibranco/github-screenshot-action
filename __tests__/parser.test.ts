@@ -1,4 +1,4 @@
-import { loadItems } from "../src/parser";
+import { loadItems } from "../src/parser.js";
 import * as fs from "fs";
 
 test("parses JSON", () => {

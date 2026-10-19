@@ -1,14 +1,15 @@
 {
   "name": "github-screenshot-action",
   "version": "1.0.0",
+  "type": "module",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "dependencies": {
-    "@actions/core": "2.0.3",
-    "p-limit": "^3.1.0",
+    "@actions/core": "3.0.1",
+    "p-limit": "^7.3.3",
     "puppeteer": "^25.14.0"
   },
   "devDependencies": {
