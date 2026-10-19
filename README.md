@@ -293,8 +293,11 @@ Output is written to `dist/`.
 
 1. Merge your changes to `main`
 2. The `release.yml` workflow automatically determines the next version via GitVersion
-3. It builds and pushes the Docker image to GHCR tagged as `vX.Y.Z` and `latest`
+3. It builds and pushes the Docker image to GHCR tagged as `vX.Y.Z`
 4. It opens a PR updating the `image:` tag in `action.yml` — merge it to complete the release
+5. Merging that PR tags the squash commit on `main` as `vX.Y.Z`, creates the GitHub release and promotes the image to `latest`
+
+The tag is created on `main` rather than on the release branch so GitVersion can see it: `main` only accepts squash merges, so a tag placed on the branch would never be reachable from `main` and the version would never move past it.
 
 ---
 

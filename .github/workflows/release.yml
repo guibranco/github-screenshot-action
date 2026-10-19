@@ -5,8 +5,30 @@ on:
       - main
   workflow_dispatch:
 
+# One release run at a time: two quick merges to main must not race each other
+# into computing (and publishing) the same version twice.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+# Releasing happens in two phases because `main` only accepts squash merges:
+#
+#   1. `build` runs on every push to main (except the merge of a release PR).
+#      It computes the next version with GitVersion, publishes the versioned
+#      Docker image and opens the PR that pins action.yml to it. Nothing is
+#      tagged yet - a tag created on the release branch would never be reachable
+#      from main after the squash merge, so GitVersion would never see it and
+#      would compute the same version forever.
+#
+#   2. `publish` runs when that PR is merged. The squash commit on main is what
+#      gets tagged, so GitVersion sees the tag on the next run and bumps past it.
+#      It also promotes the image to `latest` and creates the GitHub release.
 jobs:
-  release:
+  build:
+    name: Build image and open release PR
     if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore: update image tag')"
     runs-on: ubuntu-latest
     permissions:
@@ -29,10 +51,99 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@7417b1089e2c7de93510f1901d656ddf60bb024f # v4.7.0
 
+      - name: 🛡️ Check version is not already released
+        id: guard
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: v${{ steps.gitversion.outputs.semVer }}
+        run: |
+          BRANCH="release/action-${VERSION}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" > /dev/null; then
+            echo "::error::Tag ${VERSION} already exists but GitVersion still computes it, so the tag is probably not reachable from main. Refusing to rebuild and overwrite the published ${VERSION} image."
+            exit 1
+          fi
+          if [ -n "$(gh pr list --head "${BRANCH}" --base main --state open --json number --jq '.[0].number')" ]; then
+            echo "::notice::The release PR for ${VERSION} is still open. Merge it to tag and publish ${VERSION}; this push will be included in the next release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git ls-remote --exit-code --heads origin "refs/heads/${BRANCH}" > /dev/null; then
+            echo "::error::Branch ${BRANCH} exists but has no open PR. Delete the stale branch and re-run this workflow."
+            exit 1
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
       - name: Build project
+        if: steps.guard.outputs.skip != 'true'
         run: |
           npm ci --ignore-scripts
           npm run build
+
+      - name: Log in to GHCR
+        if: steps.guard.outputs.skip != 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: steps.guard.outputs.skip != 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}:v${{ steps.gitversion.outputs.semVer }}
+
+      - name: Open release PR for action.yml
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: v${{ steps.gitversion.outputs.semVer }}
+        run: |
+          BRANCH="release/action-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${BRANCH}"
+          sed -i "s|image: docker://${IMAGE}:.*|image: docker://${IMAGE}:${VERSION}|" action.yml
+          if git diff --quiet -- action.yml; then
+            echo "::error::action.yml already points at ${IMAGE}:${VERSION}; nothing to release."
+            exit 1
+          fi
+          git add action.yml
+          git commit -m "chore: update image tag to ${VERSION}"
+          git push origin "${BRANCH}"
+          gh pr create \
+            --title "chore: update image tag to ${VERSION}" \
+            --body-file - \
+            --base main \
+            --head "${BRANCH}" <<EOF
+          Automated update of the Docker image tag in \`action.yml\` to \`${VERSION}\`.
+
+          Merging this PR tags the merge commit as \`${VERSION}\`, creates the GitHub release and promotes \`${IMAGE}:${VERSION}\` to \`latest\`.
+          EOF
+
+  publish:
+    name: Tag and publish release
+    if: "github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: update image tag')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: 🏷️ Read version from action.yml
+        id: version
+        run: |
+          VERSION=$(sed -nE 's|^[[:space:]]*image: docker://[^:]+:(v[0-9][^[:space:]]*)[[:space:]]*$|\1|p' action.yml)
+          if [ -z "${VERSION}" ]; then
+            echo "::error::Could not read a versioned image tag from action.yml."
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
@@ -41,45 +152,32 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:v${{ steps.gitversion.outputs.semVer }}
-
-      - name: Update image tag in action.yml on a branch
+      - name: Promote image to latest
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b release/action-v${{ steps.gitversion.outputs.semVer }}
-          sed -i "s|image: docker://ghcr.io/${{ github.repository }}:.*|image: docker://ghcr.io/${{ github.repository }}:v${{ steps.gitversion.outputs.semVer }}|" action.yml
-          git add action.yml
-          git commit -m "chore: update image tag to v${{ steps.gitversion.outputs.semVer }} [skip ci]"
-          git push origin release/action-v${{ steps.gitversion.outputs.semVer }}
+          if ! docker buildx imagetools inspect "${IMAGE}:${VERSION}" > /dev/null; then
+            echo "::error::${IMAGE}:${VERSION} is not on GHCR. Re-run the build job before publishing this version."
+            exit 1
+          fi
+          docker buildx imagetools create --tag "${IMAGE}:latest" "${IMAGE}:${VERSION}"
 
-      - name: Create tag on updated action.yml commit
+      - name: Create tag on main
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          git tag v${{ steps.gitversion.outputs.semVer }}
-          git push origin v${{ steps.gitversion.outputs.semVer }}
+          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" > /dev/null; then
+            echo "::warning::Tag ${VERSION} already exists; leaving it untouched."
+            exit 0
+          fi
+          git tag "${VERSION}"
+          git push origin "${VERSION}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
-          tag_name: v${{ steps.gitversion.outputs.semVer }}
-          name: v${{ steps.gitversion.outputs.semVer }}
-          body: Automated release for version ${{ steps.gitversion.outputs.semVer }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Open PR for action.yml update
-        run: |
-          gh pr create \
-            --title "chore: update image tag to v${{ steps.gitversion.outputs.semVer }}" \
-            --body "Automated update of the Docker image tag in \`action.yml\` to \`v${{ steps.gitversion.outputs.semVer }}\`." \
-            --base main \
-            --head release/action-v${{ steps.gitversion.outputs.semVer }}
+          tag_name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          body: Automated release for version ${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
