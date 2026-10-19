@@ -54,7 +54,7 @@ jobs:
           echo "PUPPETEER_EXECUTABLE_PATH: $actual"
           [ "$actual" = "/usr/bin/chromium" ] || { echo "Unexpected value: $actual"; exit 1; }
 
-      - name: Verify @actions/core loads (catches ERR_PACKAGE_PATH_NOT_EXPORTED on Node 26+)
+      - name: Verify runtime dependencies load from /app (ESM entry points)
         run: |
-          docker run --rm --entrypoint node screenshot-action-${{ matrix.node_version }} \
-            -e "require('@actions/core'); console.log('OK')"
+          docker run --rm --workdir /app --entrypoint node screenshot-action-${{ matrix.node_version }} \
+            --input-type=module -e "await import('@actions/core'); await import('p-limit'); await import('puppeteer'); console.log('OK')"

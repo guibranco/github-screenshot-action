@@ -1,18 +1,20 @@
-import * as fs from "fs";
+import { jest } from "@jest/globals";
 import * as path from "path";
-import puppeteer from "puppeteer";
-import { takeScreenshots } from "../src/screenshot";
+
+// Native ESM: jest.mock() does not apply to ES module imports, so the mocks are
+// registered with jest.unstable_mockModule() and the modules under test are
+// loaded afterwards with dynamic import().
 
 // ── mock fs ───────────────────────────────────────────────────────────────────
-jest.mock("fs", () => ({
-  ...jest.requireActual("fs"),
+jest.unstable_mockModule("fs", () => ({
+  ...jest.requireActual<typeof import("fs")>("fs"),
   existsSync: jest.fn().mockReturnValue(true),
   mkdirSync: jest.fn(),
   writeFileSync: jest.fn(),
 }));
 
 // ── mock puppeteer (all fns defined inside factory to avoid hoisting issues) ──
-jest.mock("puppeteer", () => {
+jest.unstable_mockModule("puppeteer", () => {
   const mockPageClose  = jest.fn();
   const mockScreenshot = jest.fn().mockResolvedValue(Buffer.from("png-data"));
   const mockGoto       = jest.fn();
@@ -28,14 +30,20 @@ jest.mock("puppeteer", () => {
   const mockBrowserClose = jest.fn();
 
   return {
-    launch: jest.fn().mockResolvedValue({
-      newPage: mockNewPage,
-      close: mockBrowserClose,
-    }),
+    default: {
+      launch: jest.fn().mockResolvedValue({
+        newPage: mockNewPage,
+        close: mockBrowserClose,
+      }),
+    },
   };
 });
 
-// ── helpers to access mocks after hoisting ────────────────────────────────────
+const fs = await import("fs");
+const puppeteer = (await import("puppeteer")).default;
+const { takeScreenshots } = await import("../src/screenshot.js");
+
+// ── helpers to access mocks after mocking ────────────────────────────────────
 const getMocks = async () => {
   const browser = await (puppeteer.launch as jest.Mock)();
   const page    = await browser.newPage();

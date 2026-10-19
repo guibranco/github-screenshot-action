@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
-import { loadItems } from "./parser";
-import { takeScreenshots } from "./screenshot";
-import { commitChanges, createPullRequest } from "./git";
+import { loadItems } from "./parser.js";
+import { takeScreenshots } from "./screenshot.js";
+import { commitChanges, createPullRequest } from "./git.js";
 
 async function run() {
   try {
