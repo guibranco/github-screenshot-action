@@ -26,6 +26,9 @@ env:
 #   2. `publish` runs when that PR is merged. The squash commit on main is what
 #      gets tagged, so GitVersion sees the tag on the next run and bumps past it.
 #      It also promotes the image to `latest` and creates the GitHub release.
+#      If action.yml on main already pins the computed version (bumped by hand,
+#      or the PR was merged before the tag existed), `build` skips the PR and
+#      `publish` runs right after it, tagging main's HEAD instead.
 jobs:
   build:
     name: Build image and open release PR
@@ -35,6 +38,10 @@ jobs:
       contents: write
       packages: write
       pull-requests: write
+    outputs:
+      # "true" when action.yml on main already pins the computed version, so there
+      # is no release PR to open and `publish` should run straight away.
+      publish_now: ${{ steps.guard.outputs.pinned }}
 
     steps:
       - name: 📥 Checkout Repository
@@ -72,6 +79,12 @@ jobs:
             exit 1
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
+          if grep -qF "image: docker://${IMAGE}:${VERSION}" action.yml; then
+            echo "::notice::action.yml already points at ${IMAGE}:${VERSION}; publishing ${VERSION} straight from main instead of opening a release PR."
+            echo "pinned=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pinned=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build project
         if: steps.guard.outputs.skip != 'true'
@@ -96,7 +109,7 @@ jobs:
           tags: ${{ env.IMAGE }}:v${{ steps.gitversion.outputs.semVer }}
 
       - name: Open release PR for action.yml
-        if: steps.guard.outputs.skip != 'true'
+        if: steps.guard.outputs.skip != 'true' && steps.guard.outputs.pinned != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: v${{ steps.gitversion.outputs.semVer }}
@@ -107,7 +120,7 @@ jobs:
           git checkout -b "${BRANCH}"
           sed -i "s|image: docker://${IMAGE}:.*|image: docker://${IMAGE}:${VERSION}|" action.yml
           if git diff --quiet -- action.yml; then
-            echo "::error::action.yml already points at ${IMAGE}:${VERSION}; nothing to release."
+            echo "::error::sed did not change action.yml; is the 'image: docker://${IMAGE}:...' line still there?"
             exit 1
           fi
           git add action.yml
@@ -125,7 +138,14 @@ jobs:
 
   publish:
     name: Tag and publish release
-    if: "github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: update image tag')"
+    needs: build
+    # Runs when a release PR is merged (`build` is skipped on that push), or
+    # right after `build` when action.yml already pinned the version it computed.
+    if: >-
+      !cancelled() && (
+        (needs.build.result == 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: update image tag'))
+        || (needs.build.result == 'success' && needs.build.outputs.publish_now == 'true')
+      )
     runs-on: ubuntu-latest
     permissions:
       contents: write
