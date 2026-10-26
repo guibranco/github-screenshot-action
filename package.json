@@ -10,7 +10,7 @@
   "dependencies": {
     "@actions/core": "3.0.1",
     "p-limit": "^7.3.3",
-    "puppeteer": "^25.14.0"
+    "puppeteer": "^25.16.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
