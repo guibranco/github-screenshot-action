@@ -9,6 +9,12 @@ updates:
       time: "06:00"
       timezone: "Europe/Dublin"
     open-pull-requests-limit: 10
+    ignore:
+      # ts-jest 29.x declares `typescript@">=4.3 <7"` as a peer dependency, so
+      # bumping to TypeScript 7 (the native compiler) makes `npm ci` fail with
+      # ERESOLVE (see #164). Drop this once a ts-jest release supports TypeScript 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       puppeteer:
         patterns:
@@ -23,7 +29,7 @@ updates:
           - "ts-jest"
           - "@types/*"
     labels:
-      - "dependencies"
+      - "📦 dependencies"
       - "npm"
     commit-message:
       prefix: "chore(npm)"
@@ -37,7 +43,7 @@ updates:
       timezone: "Europe/Dublin"
     open-pull-requests-limit: 5
     labels:
-      - "dependencies"
+      - "📦 dependencies"
       - "docker"
     commit-message:
       prefix: "chore(docker)"
@@ -61,7 +67,7 @@ updates:
         patterns:
           - "gittools/*"
     labels:
-      - "dependencies"
+      - "📦 dependencies"
       - "github-actions"
     commit-message:
       prefix: "chore(actions)"
