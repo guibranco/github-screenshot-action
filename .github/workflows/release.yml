@@ -5,8 +5,15 @@ on:
       - main
   workflow_dispatch:
 
-# One release run at a time: two quick merges to main must not race each other
-# into computing (and publishing) the same version twice.
+# Release runs share one concurrency group so two quick merges to main cannot
+# race each other into computing (and publishing) the same version twice.
+#
+# A concurrency group only keeps ONE pending run: when a third push arrives while
+# a run is in progress, the run that was waiting is cancelled and replaced. So no
+# run may assume it is the one that handles "its" commit. Instead, every run
+# first reconciles main: if action.yml pins a version that has no tag yet, the
+# commit that introduced that pin is tagged and published, whichever run gets
+# there first.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -16,32 +23,136 @@ env:
 
 # Releasing happens in two phases because `main` only accepts squash merges:
 #
-#   1. `build` runs on every push to main (except the merge of a release PR).
-#      It computes the next version with GitVersion, publishes the versioned
-#      Docker image and opens the PR that pins action.yml to it. Nothing is
-#      tagged yet - a tag created on the release branch would never be reachable
-#      from main after the squash merge, so GitVersion would never see it and
-#      would compute the same version forever.
+#   1. `publish` runs first on every push to main. If action.yml pins a version
+#      that is not tagged yet (a release PR was merged, or the pin was bumped by
+#      hand), it finds the commit that introduced the pin, tags THAT commit,
+#      promotes the image to `latest` and creates the GitHub release. The pin
+#      commit is looked up from history rather than taken from HEAD, so the tag
+#      still lands on the release merge commit when the run for that merge was
+#      cancelled while pending and a later push publishes it instead. If the
+#      pinned image is already on GHCR it is never rebuilt.
 #
-#   2. `publish` runs when that PR is merged. The squash commit on main is what
-#      gets tagged, so GitVersion sees the tag on the next run and bumps past it.
-#      It also promotes the image to `latest` and creates the GitHub release.
-#      If action.yml on main already pins the computed version (bumped by hand,
-#      or the PR was merged before the tag existed), `build` skips the PR and
-#      `publish` runs right after it, tagging main's HEAD instead.
+#   2. `build` runs after it (except on the merge of a release PR). It computes
+#      the next version with GitVersion - now past the tag created in phase 1 -
+#      publishes the versioned Docker image and opens the PR that pins action.yml
+#      to it. Nothing is tagged here: a tag created on the release branch would
+#      never be reachable from main after the squash merge.
 jobs:
+  publish:
+    name: Tag and publish pinned release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔎 Find unreleased pin
+        id: pin
+        run: |
+          VERSION=$(sed -nE 's|^[[:space:]]*image: docker://[^:]+:(v[0-9][^[:space:]]*)[[:space:]]*$|\1|p' action.yml)
+          if [ -z "${VERSION}" ]; then
+            echo "::error::Could not read a versioned image tag from action.yml."
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" > /dev/null; then
+            echo "::notice::${VERSION} is already tagged; nothing to publish."
+            echo "pending=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # The newest commit that changed the number of occurrences of the pin
+          # is the one that introduced it (HEAD still contains it). With squash
+          # merges this is the release PR's merge commit, not whatever HEAD is.
+          SHA=$(git log -1 --format=%H -S "image: docker://${IMAGE}:${VERSION}" -- action.yml)
+          if [ -z "${SHA}" ]; then
+            echo "::error::Could not find the commit that pinned ${IMAGE}:${VERSION} in action.yml."
+            exit 1
+          fi
+          echo "::notice::${VERSION} was pinned by ${SHA} and is not tagged yet; publishing it from that commit."
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "pending=true" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        if: steps.pin.outputs.pending == 'true'
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check pinned image exists
+        id: image
+        if: steps.pin.outputs.pending == 'true'
+        env:
+          VERSION: ${{ steps.pin.outputs.version }}
+        run: |
+          if docker buildx imagetools inspect "${IMAGE}:${VERSION}" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::${IMAGE}:${VERSION} is not on GHCR (pin bumped by hand?); building it from ${{ steps.pin.outputs.sha }}."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Only for a hand-bumped pin with no image yet. A published image is never
+      # rebuilt, so the tag and the image always come from the same code.
+      - name: Check out pin commit
+        if: steps.pin.outputs.pending == 'true' && steps.image.outputs.exists != 'true'
+        run: git checkout --detach "${{ steps.pin.outputs.sha }}"
+
+      - name: Build project
+        if: steps.pin.outputs.pending == 'true' && steps.image.outputs.exists != 'true'
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Build and push Docker image
+        if: steps.pin.outputs.pending == 'true' && steps.image.outputs.exists != 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}:${{ steps.pin.outputs.version }}
+
+      - name: Promote image to latest
+        if: steps.pin.outputs.pending == 'true'
+        env:
+          VERSION: ${{ steps.pin.outputs.version }}
+        run: docker buildx imagetools create --tag "${IMAGE}:latest" "${IMAGE}:${VERSION}"
+
+      - name: Tag pin commit
+        if: steps.pin.outputs.pending == 'true'
+        env:
+          VERSION: ${{ steps.pin.outputs.version }}
+          SHA: ${{ steps.pin.outputs.sha }}
+        run: |
+          git tag "${VERSION}" "${SHA}"
+          git push origin "refs/tags/${VERSION}"
+
+      - name: Create GitHub Release
+        if: steps.pin.outputs.pending == 'true'
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
+        with:
+          tag_name: ${{ steps.pin.outputs.version }}
+          target_commitish: ${{ steps.pin.outputs.sha }}
+          name: ${{ steps.pin.outputs.version }}
+          body: Automated release for version ${{ steps.pin.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
     name: Build image and open release PR
+    needs: publish
     if: "github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'chore: update image tag')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
       pull-requests: write
-    outputs:
-      # "true" when action.yml on main already pins the computed version, so there
-      # is no release PR to open and `publish` should run straight away.
-      publish_now: ${{ steps.guard.outputs.pinned }}
 
     steps:
       - name: 📥 Checkout Repository
@@ -65,6 +176,11 @@ jobs:
           VERSION: v${{ steps.gitversion.outputs.semVer }}
         run: |
           BRANCH="release/action-${VERSION}"
+          if git tag --points-at HEAD | grep -qxF "${VERSION}"; then
+            echo "::notice::HEAD is already released as ${VERSION}; nothing new to release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" > /dev/null; then
             echo "::error::Tag ${VERSION} already exists but GitVersion still computes it, so the tag is probably not reachable from main. Refusing to rebuild and overwrite the published ${VERSION} image."
             exit 1
@@ -78,13 +194,11 @@ jobs:
             echo "::error::Branch ${BRANCH} exists but has no open PR. Delete the stale branch and re-run this workflow."
             exit 1
           fi
-          echo "skip=false" >> "$GITHUB_OUTPUT"
           if grep -qF "image: docker://${IMAGE}:${VERSION}" action.yml; then
-            echo "::notice::action.yml already points at ${IMAGE}:${VERSION}; publishing ${VERSION} straight from main instead of opening a release PR."
-            echo "pinned=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "pinned=false" >> "$GITHUB_OUTPUT"
+            echo "::error::action.yml already pins ${VERSION} but it is not tagged, even though the publish job just ran. Re-run this workflow."
+            exit 1
           fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Build project
         if: steps.guard.outputs.skip != 'true'
@@ -109,7 +223,7 @@ jobs:
           tags: ${{ env.IMAGE }}:v${{ steps.gitversion.outputs.semVer }}
 
       - name: Open release PR for action.yml
-        if: steps.guard.outputs.skip != 'true' && steps.guard.outputs.pinned != 'true'
+        if: steps.guard.outputs.skip != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: v${{ steps.gitversion.outputs.semVer }}
@@ -135,69 +249,3 @@ jobs:
 
           Merging this PR tags the merge commit as \`${VERSION}\`, creates the GitHub release and promotes \`${IMAGE}:${VERSION}\` to \`latest\`.
           EOF
-
-  publish:
-    name: Tag and publish release
-    needs: build
-    # Runs when a release PR is merged (`build` is skipped on that push), or
-    # right after `build` when action.yml already pinned the version it computed.
-    if: >-
-      !cancelled() && (
-        (needs.build.result == 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, 'chore: update image tag'))
-        || (needs.build.result == 'success' && needs.build.outputs.publish_now == 'true')
-      )
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: 🏷️ Read version from action.yml
-        id: version
-        run: |
-          VERSION=$(sed -nE 's|^[[:space:]]*image: docker://[^:]+:(v[0-9][^[:space:]]*)[[:space:]]*$|\1|p' action.yml)
-          if [ -z "${VERSION}" ]; then
-            echo "::error::Could not read a versioned image tag from action.yml."
-            exit 1
-          fi
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Promote image to latest
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          if ! docker buildx imagetools inspect "${IMAGE}:${VERSION}" > /dev/null; then
-            echo "::error::${IMAGE}:${VERSION} is not on GHCR. Re-run the build job before publishing this version."
-            exit 1
-          fi
-          docker buildx imagetools create --tag "${IMAGE}:latest" "${IMAGE}:${VERSION}"
-
-      - name: Create tag on main
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          if git ls-remote --exit-code --tags origin "refs/tags/${VERSION}" > /dev/null; then
-            echo "::warning::Tag ${VERSION} already exists; leaving it untouched."
-            exit 0
-          fi
-          git tag "${VERSION}"
-          git push origin "${VERSION}"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
-        with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: ${{ steps.version.outputs.version }}
-          body: Automated release for version ${{ steps.version.outputs.version }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
