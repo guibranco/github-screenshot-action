@@ -138,9 +138,8 @@ jobs:
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
           tag_name: ${{ steps.pin.outputs.version }}
-          name: Release ${{ steps.pin.outputs.version }}
           target_commitish: ${{ steps.pin.outputs.sha }}
-          name: ${{ steps.pin.outputs.version }}
+          name: Release ${{ steps.pin.outputs.version }}
           body: Automated release for version ${{ steps.pin.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
